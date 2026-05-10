@@ -100,6 +100,25 @@ def admin_panel():
     if not session.get("is_admin"):
         return redirect(url_for("login"))
     
+    try:
+        conn = get_db_connection()
+        # Ürünleri ve kullanıcıları çekiyoruz
+        items_db = conn.execute("SELECT * FROM items").fetchall()
+        users_db = conn.execute("SELECT * FROM users").fetchall()
+        conn.close()
+        
+        # Veritabanından gelen verileri listeye çeviriyoruz
+        items = [dict(ix) for ix in items_db]
+        users = [dict(ux) for ux in users_db]
+        
+    except Exception as e:
+        print(f"Veritabanı hatası: {e}")
+        items = [] # Hata olursa sayfa çökmesin diye boş liste yolluyoruz
+        users = []
+
+    # HTML'e gönderdiğimiz değişken isimleri (items ve users) admin.html ile aynı olmalı
+    return render_template("admin.html", items=items, users=users)
+    
     conn = get_db_connection()
     # Veritabanından ürünleri ve kullanıcıları çekiyoruz
     items = conn.execute("SELECT * FROM items").fetchall()
