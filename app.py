@@ -101,6 +101,15 @@ def admin_panel():
         return redirect(url_for("login"))
     
     conn = get_db_connection()
+    # Veritabanından ürünleri ve kullanıcıları çekiyoruz
+    items = conn.execute("SELECT * FROM items").fetchall()
+    users = conn.execute("SELECT * FROM users").fetchall()
+    conn.close()
+    
+    # BURASI ÇOK ÖNEMLİ: items ve users değişkenlerini HTML'e gönderiyoruz
+    return render_template("admin.html", items=items, users=users)
+    
+    conn = get_db_connection()
     items = conn.execute("SELECT * FROM items").fetchall()
     users = conn.execute("SELECT * FROM users").fetchall()
     conn.close()
