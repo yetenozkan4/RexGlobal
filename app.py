@@ -164,6 +164,36 @@ def logout():
 def add_item():
     if not session.get("is_admin"): return "Hata", 403
     
+    # Formdan verileri alırken varsayılan değerler atıyoruz
+    name = request.form.get("name")
+    price = request.form.get("price", 0)
+    category = request.form.get("category")
+    rarity = request.form.get("rarity")
+    wear = request.form.get("wear", "")
+    # Float boş gelirse 0.0 yap (Çökmesini engeller)
+    try:
+        float_val = float(request.form.get("float") or 0)
+    except:
+        float_val = 0.0
+
+    file = request.files.get('item_img')
+    img_url = ""
+    if file:
+        filename = secure_filename(file.filename)
+        if not os.path.exists(app.config['UPLOAD_FOLDER']):
+            os.makedirs(app.config['UPLOAD_FOLDER'])
+        file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+        img_url = f"/static/uploads/{filename}"
+
+    conn = get_db_connection()
+    conn.execute('''INSERT INTO items 
+        (name, game, category, price, rarity, img, wear, float) 
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)''',
+        (name, "Counter-Strike 2", category, price, rarity, img_url, wear, float_val))
+    conn.commit()
+    conn.close()
+    return redirect(url_for("admin_panel"))
+    
     file = request.files.get('item_img')
     img_url = ""
     if file:
