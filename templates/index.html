@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RexGlobal — CS2 Item Mağazası</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: #0f1114;
+    color: #c6d4df;
+    min-height: 100vh;
+  }
+
+  /* ── TOP BAR ── */
+  .topbar {
+    background: #171a21;
+    border-bottom: 1px solid #2a2d35;
+    padding: 0 2rem;
+    height: 52px;
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+  }
+  .logo {
+    font-size: 20px;
+    font-weight: 700;
+    color: #fff;
+    text-decoration: none;
+    letter-spacing: -0.3px;
+  }
+  .logo span { color: #66c0f4; }
+  .topbar-links { display: flex; gap: 0; margin-left: 1rem; }
+  .topbar-link {
+    color: #8f98a0;
+    text-decoration: none;
+    font-size: 13px;
+    padding: 0 14px;
+    height: 52px;
+    display: flex;
+    align-items: center;
+    border-bottom: 2px solid transparent;
+    transition: color .15s, border-color .15s;
+  }
+  .topbar-link:hover { color: #c6d4df; }
+  .topbar-link.active { color: #fff; border-bottom-color: #66c0f4; }
+  .topbar-right { margin-left: auto; display: flex; align-items: center; gap: 12px; }
+  .cart-button {
+    background: #4c6b22;
+    color: #a4d007;
+    border: none;
+    padding: 7px 16px;
+    border-radius: 3px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: background .15s;
+  }
+  .cart-button:hover { background: #5a7a28; }
+  .cart-badge {
+    background: #a4d007;
+    color: #1a1a1a;
+    border-radius: 10px;
+    padding: 1px 7px;
+    font-size: 11px;
+    font-weight: 700;
+  }
+
+  /* ── HERO BANNER ── */
+  .hero {
+    background: linear-gradient(135deg, #1b2838 0%, #1e3a5f 50%, #1b2838 100%);
+    border-bottom: 1px solid #2a3a50;
+    padding: 2.5rem 2rem;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute;
+    right: -60px;
+    top: -60px;
+    width: 350px;
+    height: 350px;
+    background: radial-gradient(circle, rgba(102,192,244,0.06) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .hero-inner { max-width: 1200px; margin: 0 auto; }
+  .hero h1 { font-size: 28px; font-weight: 700; color: #fff; margin-bottom: 6px; }
+  .hero p { color: #8f98a0; font-size: 14px; margin-bottom: 1.5rem; }
+  .hero-stats { display: flex; gap: 2.5rem; }
+  .hstat { display: flex; flex-direction: column; gap: 2px; }
+  .hstat-val { font-size: 22px; font-weight: 700; color: #66c0f4; }
+  .hstat-lbl { font-size: 12px; color: #8f98a0; }
+
+  /* ── MAIN LAYOUT ── */
+  .main { max-width: 1200px; margin: 0 auto; padding: 24px 2rem; display: grid; grid-template-columns: 220px 1fr; gap: 20px; align-items: start; }
+
+  /* ── SIDEBAR ── */
+  .sidebar { background: #171a21; border: 1px solid #2a2d35; border-radius: 4px; }
+  .sidebar-section { border-bottom: 1px solid #2a2d35; padding: 14px 16px; }
+  .sidebar-section:last-child { border-bottom: none; }
+  .sidebar-title { font-size: 11px; font-weight: 700; color: #8f98a0; letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 10px; }
+  .filter-list { list-style: none; }
+  .filter-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 5px 8px;
+    border-radius: 3px;
+    cursor: pointer;
+    font-size: 13px;
+    color: #8f98a0;
+    transition: background .1s, color .1s;
+  }
+  .filter-item:hover { background: #1e2329; color: #c6d4df; }
+  .filter-item.active { background: #1e2329; color: #fff; }
+  .filter-item .count { font-size: 11px; color: #4a5568; background: #1e2329; padding: 1px 6px; border-radius: 2px; }
+  .filter-item.active .count { color: #66c0f4; }
+  .rarity-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 8px; flex-shrink: 0; }
+  .dot-Contraband { background: #e4ae39; }
+  .dot-Covert { background: #eb4b4b; }
+  .dot-Classified { background: #d32ce6; }
+  .dot-Restricted { background: #8847ff; }
+  .dot-MilSpec { background: #4b69ff; }
+  .price-range { display: flex; flex-direction: column; gap: 8px; }
+  .price-inputs { display: flex; gap: 8px; }
+  .price-input {
+    width: 100%;
+    background: #1e2329;
+    border: 1px solid #2a2d35;
+    border-radius: 3px;
+    color: #c6d4df;
+    padding: 6px 10px;
+    font-size: 13px;
+    outline: none;
+  }
+  .price-input:focus { border-color: #66c0f4; }
+  .apply-btn {
+    background: #4c6b22;
+    color: #a4d007;
+    border: none;
+    padding: 7px 12px;
+    border-radius: 3px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    width: 100%;
+    transition: background .15s;
+  }
+  .apply-btn:hover { background: #5a7a28; }
+
+  /* ── CONTENT ── */
+  .content {}
+  .toolbar {
+    background: #171a21;
+    border: 1px solid #2a2d35;
+    border-radius: 4px;
+    padding: 10px 14px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+  .search-wrap { flex: 1; position: relative; }
+  .search-icon { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: #4a5568; pointer-events: none; }
+  .search-input {
+    width: 100%;
+    background: #1e2329;
+    border: 1px solid #2a2d35;
+    border-radius: 3px;
+    color: #c6d4df;
+    padding: 7px 10px 7px 34px;
+    font-size: 13px;
+    outline: none;
+    transition: border-color .15s;
+  }
+  .search-input:focus { border-color: #66c0f4; }
+  .search-input::placeholder { color: #4a5568; }
+  .sort-wrap { display: flex; align-items: center; gap: 8px; }
+  .sort-label { font-size: 12px; color: #8f98a0; white-space: nowrap; }
+  .sort-select {
+    background: #1e2329;
+    border: 1px solid #2a2d35;
+    border-radius: 3px;
+    color: #c6d4df;
+    padding: 7px 10px;
+    font-size: 13px;
+    cursor: pointer;
+    outline: none;
+  }
+  .sort-select:focus { border-color: #66c0f4; }
+  .results-count { font-size: 13px; color: #8f98a0; white-space: nowrap; }
+
+  /* ── ITEMS GRID ── */
+  .items-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(175px, 1fr)); gap: 10px; }
+  .loading { grid-column: 1/-1; padding: 4rem; text-align: center; color: #4a5568; font-size: 14px; }
+
+  /* ── ITEM CARD ── */
+  .card {
+    background: #171a21;
+    border: 1px solid #2a2d35;
+    border-radius: 4px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: border-color .15s, transform .15s;
+    position: relative;
+  }
+  .card:hover { border-color: #4a6a8a; transform: translateY(-2px); }
+  .card-rarity-bar { height: 3px; width: 100%; }
+  .bar-Contraband { background: linear-gradient(90deg, #e4ae39, #f5c842); }
+  .bar-Covert     { background: linear-gradient(90deg, #eb4b4b, #ff6b6b); }
+  .bar-Classified { background: linear-gradient(90deg, #d32ce6, #e855f8); }
+  .bar-Restricted { background: linear-gradient(90deg, #8847ff, #a068ff); }
+  .bar-MilSpec    { background: linear-gradient(90deg, #4b69ff, #6b8aff); }
+
+  .discount-tag {
+    position: absolute;
+    top: 10px;
+    right: 8px;
+    background: #4c6b22;
+    color: #a4d007;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 2px 7px;
+    border-radius: 2px;
+  }
+  .card-img-wrap {
+    background: #1b2838;
+    height: 130px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 12px;
+  }
+  .card-img-wrap img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    filter: drop-shadow(0 2px 8px rgba(0,0,0,0.5));
+  }
+  .card-img-placeholder {
+    font-size: 48px;
+    opacity: 0.4;
+  }
+  .card-body { padding: 10px 12px 12px; }
+  .card-game { font-size: 11px; color: #4a5568; margin-bottom: 3px; }
+  .card-name { font-size: 13px; font-weight: 600; color: #c6d4df; margin-bottom: 6px; line-height: 1.3; min-height: 34px; }
+  .card-wear { font-size: 11px; color: #8f98a0; margin-bottom: 8px; }
+  .card-footer { display: flex; align-items: center; justify-content: space-between; }
+  .card-price { display: flex; flex-direction: column; }
+  .price-current { font-size: 16px; font-weight: 700; color: #a4d007; }
+  .price-original { font-size: 11px; color: #4a5568; text-decoration: line-through; }
+  .add-btn {
+    background: #2a475e;
+    border: 1px solid #1b2838;
+    color: #66c0f4;
+    width: 30px;
+    height: 30px;
+    border-radius: 3px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 18px;
+    transition: background .15s;
+    line-height: 1;
+  }
+  .add-btn:hover { background: #3a5a7a; }
+
+  /* ── CART DRAWER ── */
+  .overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.7);
+    z-index: 200;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .2s;
+  }
+  .overlay.open { opacity: 1; pointer-events: all; }
+  .drawer {
+    position: fixed;
+    top: 0; right: 0;
+    width: 360px;
+    height: 100%;
+    background: #171a21;
+    border-left: 1px solid #2a2d35;
+    z-index: 201;
+    display: flex;
+    flex-direction: column;
+    transform: translateX(100%);
+    transition: transform .2s;
+  }
+  .drawer.open { transform: translateX(0); }
+  .drawer-header {
+    padding: 16px 20px;
+    border-bottom: 1px solid #2a2d35;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .drawer-title { font-size: 15px; font-weight: 700; color: #fff; }
+  .close-btn {
+    background: none; border: none; color: #8f98a0; cursor: pointer; font-size: 20px;
+    width: 28px; height: 28px; display: flex; align-items: center; justify-content: center;
+    border-radius: 3px; transition: background .15s;
+  }
+  .close-btn:hover { background: #2a2d35; color: #c6d4df; }
+  .drawer-items { flex: 1; overflow-y: auto; padding: 12px; }
+  .cart-empty-msg { padding: 3rem 1rem; text-align: center; color: #4a5568; font-size: 14px; }
+  .cart-item {
+    display: flex;
+    gap: 10px;
+    padding: 10px;
+    border: 1px solid #2a2d35;
+    border-radius: 3px;
+    margin-bottom: 8px;
+    background: #1b2838;
+    align-items: center;
+  }
+  .cart-item-img { width: 60px; height: 45px; object-fit: contain; flex-shrink: 0; }
+  .cart-item-info { flex: 1; min-width: 0; }
+  .cart-item-name { font-size: 12px; font-weight: 600; color: #c6d4df; line-height: 1.3; margin-bottom: 2px; }
+  .cart-item-wear { font-size: 11px; color: #8f98a0; }
+  .cart-item-price { font-size: 14px; font-weight: 700; color: #a4d007; white-space: nowrap; }
+  .remove-btn {
+    background: none; border: none; color: #4a5568; cursor: pointer; font-size: 16px;
+    padding: 4px; border-radius: 2px; transition: color .15s;
+  }
+  .remove-btn:hover { color: #eb4b4b; }
+  .drawer-footer {
+    border-top: 1px solid #2a2d35;
+    padding: 16px 20px;
+  }
+  .total-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+  .total-label { font-size: 13px; color: #8f98a0; }
+  .total-val { font-size: 20px; font-weight: 700; color: #a4d007; }
+  .checkout-btn {
+    width: 100%;
+    background: #4c6b22;
+    color: #a4d007;
+    border: none;
+    padding: 12px;
+    border-radius: 3px;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    letter-spacing: 0.5px;
+    transition: background .15s;
+  }
+  .checkout-btn:hover { background: #5a7a28; }
+
+  /* ── TOAST ── */
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%) translateY(80px);
+    background: #1e2329;
+    border: 1px solid #2a2d35;
+    color: #c6d4df;
+    padding: 10px 20px;
+    border-radius: 4px;
+    font-size: 13px;
+    z-index: 300;
+    transition: transform .25s;
+    pointer-events: none;
+    white-space: nowrap;
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+
+  /* ── FOOTER ── */
+  footer {
+    background: #171a21;
+    border-top: 1px solid #2a2d35;
+    padding: 20px 2rem;
+    margin-top: 3rem;
+  }
+  .footer-inner { max-width: 1200px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; }
+  .footer-links { display: flex; gap: 1.5rem; }
+  .footer-links a { color: #4a5568; font-size: 12px; text-decoration: none; }
+  .footer-links a:hover { color: #8f98a0; }
+  .footer-copy { font-size: 12px; color: #4a5568; }
+
+  /* ── NO RESULTS ── */
+  .no-results { grid-column: 1/-1; padding: 3rem; text-align: center; color: #4a5568; font-size: 14px; }
+
+  @media (max-width: 768px) {
+    .main { grid-template-columns: 1fr; }
+    .sidebar { display: none; }
+    .drawer { width: 100%; }
+  }
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<nav class="topbar">
+  <a href="#" class="logo">Rex<span>Global</span></a>
+  <div class="topbar-links">
+    <a href="#" class="topbar-link active">Mağaza</a>
+    <a href="#" class="topbar-link">Fırsatlar</a>
+    <a href="#" class="topbar-link">Nasıl Çalışır</a>
+    <a href="#" class="topbar-link">Destek</a>
+  </div>
+  <div class="topbar-right">
+    <button class="cart-button" id="cartBtn">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+      Sepet
+      <span class="cart-badge" id="cartCount">0</span>
+    </button>
+  </div>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-inner">
+    <h1>RexGlobal Expo Satış Mağazası</h1>
+    <p>Güvenli ve hızlı teslimat. 7/24 destek. Tüm ödemeler güvence altında.</p>
+    <div class="hero-stats">
+      <div class="hstat"><span class="hstat-val">8,400+</span><span class="hstat-lbl">Aktif İtem</span></div>
+      <div class="hstat"><span class="hstat-val">120K+</span><span class="hstat-lbl">Tamamlanan Sipariş</span></div>
+      <div class="hstat"><span class="hstat-val">4.8 / 5</span><span class="hstat-lbl">Müşteri Puanı</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-section">
+      <div class="sidebar-title">Kategori</div>
+      <ul class="filter-list" id="categoryList">
+        <li class="filter-item active" data-value="all">Tümü <span class="count" id="count-all">12</span></li>
+        <li class="filter-item" data-value="Silah Kını">Silah Kını</li>
+        <li class="filter-item" data-value="Bıçak">Bıçak</li>
+      </ul>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-title">Nadirlik</div>
+      <ul class="filter-list" id="rarityList">
+        <li class="filter-item active" data-value="all">Tümü</li>
+        <li class="filter-item" data-value="Contraband"><span class="rarity-dot dot-Contraband"></span>Contraband</li>
+        <li class="filter-item" data-value="Covert"><span class="rarity-dot dot-Covert"></span>Covert</li>
+        <li class="filter-item" data-value="Classified"><span class="rarity-dot dot-Classified"></span>Classified</li>
+        <li class="filter-item" data-value="Restricted"><span class="rarity-dot dot-Restricted"></span>Restricted</li>
+        <li class="filter-item" data-value="MilSpec"><span class="rarity-dot dot-MilSpec"></span>Mil-Spec</li>
+      </ul>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-title">Fiyat Aralığı ($)</div>
+      <div class="price-range">
+        <div class="price-inputs">
+          <input type="number" class="price-input" id="minPrice" placeholder="Min" min="0">
+          <input type="number" class="price-input" id="maxPrice" placeholder="Max" min="0">
+        </div>
+        <button class="apply-btn" id="applyPrice">Uygula</button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- CONTENT -->
+  <div class="content">
+    <div class="toolbar">
+      <div class="search-wrap">
+        <svg class="search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input type="text" class="search-input" id="searchInput" placeholder="İtem ara...">
+      </div>
+      <div class="sort-wrap">
+        <span class="sort-label">Sırala:</span>
+        <select class="sort-select" id="sortSelect">
+          <option value="default">Öne Çıkanlar</option>
+          <option value="price_asc">Fiyat: Düşük → Yüksek</option>
+          <option value="price_desc">Fiyat: Yüksek → Düşük</option>
+          <option value="discount">En Çok İndirimli</option>
+        </select>
+      </div>
+      <span class="results-count" id="resultsCount">12 ürün</span>
+    </div>
+
+    <div class="items-grid" id="itemsGrid">
+      <div class="loading">Yükleniyor...</div>
+    </div>
+  </div>
+</div>
+
+<!-- CART DRAWER -->
+<div class="overlay" id="overlay"></div>
+<div class="drawer" id="drawer">
+  <div class="drawer-header">
+    <span class="drawer-title">Sepetim</span>
+    <button class="close-btn" id="closeDrawer">✕</button>
+  </div>
+  <div class="drawer-items" id="drawerItems">
+    <p class="cart-empty-msg">Sepetiniz boş.</p>
+  </div>
+  <div class="drawer-footer" id="drawerFooter" style="display:none">
+    <div class="total-row">
+      <span class="total-label">Toplam</span>
+      <span class="total-val" id="totalVal">$0.00</span>
+    </div>
+    <button class="checkout-btn">Ödemeye Geç</button>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<footer>
+  <div class="footer-inner">
+    <span style="font-size:13px; color:#4a5568;">© 2025 RexGlobal</span>
+    <div class="footer-links">
+      <a href="#">Kullanım Şartları</a>
+      <a href="#">Gizlilik Politikası</a>
+      <a href="#">SSS</a>
+      <a href="#">İletişim</a>
+    </div>
+    <span class="footer-copy">Tüm hakları saklıdır.</span>
+  </div>
+</footer>
+
+<script>
+const PLACEHOLDERS = {
+  'Silah Kını': '🔫',
+  'Bıçak': '🔪',
+};
+
+let state = { category: 'all', rarity: 'all', sort: 'default', q: '' };
+let cart = [];
+let allItems = [];
+
+async function fetchItems() {
+  const params = new URLSearchParams({ category: state.category, rarity: state.rarity, sort: state.sort, q: state.q });
+  const res = await fetch('/api/items?' + params);
+  return res.json();
+}
+
+function formatPrice(p) { return '$' + p.toFixed(2); }
+
+function originalPrice(item) {
+  if (!item.discount) return null;
+  return item.price / (1 - item.discount / 100);
+}
+
+function renderCard(item) {
+  const orig = originalPrice(item);
+  return `
+    <div class="card" onclick="addToCart(${item.id})">
+      <div class="card-rarity-bar bar-${item.rarity}"></div>
+      ${item.discount ? `<div class="discount-tag">-%${item.discount}</div>` : ''}
+      <div class="card-img-wrap">
+        <img src="${item.img}" alt="${item.name}" onerror="this.style.display='none'; this.nextElementSibling.style.display='block'">
+        <div class="card-img-placeholder" style="display:none">${PLACEHOLDERS[item.category] || '🎮'}</div>
+      </div>
+      <div class="card-body">
+        <div class="card-game">${item.game}</div>
+        <div class="card-name">${item.name}</div>
+        <div class="card-wear">${item.wear} · Float: ${item.float}</div>
+        <div class="card-footer">
+          <div class="card-price">
+            <span class="price-current">${formatPrice(item.price)}</span>
+            ${orig ? `<span class="price-original">${formatPrice(orig)}</span>` : ''}
+          </div>
+          <button class="add-btn" title="Sepete Ekle">+</button>
+        </div>
+      </div>
+    </div>`;
+}
+
+async function loadItems() {
+  document.getElementById('itemsGrid').innerHTML = '<div class="loading">Yükleniyor...</div>';
+  const items = await fetchItems();
+  allItems = items;
+  document.getElementById('resultsCount').textContent = items.length + ' ürün';
+  if (!items.length) {
+    document.getElementById('itemsGrid').innerHTML = '<div class="no-results">Sonuç bulunamadı.</div>';
+    return;
+  }
+  document.getElementById('itemsGrid').innerHTML = items.map(renderCard).join('');
+}
+
+function addToCart(id) {
+  const item = allItems.find(i => i.id === id);
+  if (!item) return;
+  const existing = cart.find(c => c.id === id);
+  if (existing) { existing.qty++; } else { cart.push({ ...item, qty: 1 }); }
+  updateCartUI();
+  showToast(item.name + ' sepete eklendi');
+}
+
+function removeFromCart(id) {
+  cart = cart.filter(c => c.id !== id);
+  updateCartUI();
+}
+
+function updateCartUI() {
+  const total = cart.reduce((s, c) => s + c.price * c.qty, 0);
+  const count = cart.reduce((s, c) => s + c.qty, 0);
+  document.getElementById('cartCount').textContent = count;
+  document.getElementById('totalVal').textContent = formatPrice(total);
+  const footer = document.getElementById('drawerFooter');
+  if (!cart.length) {
+    document.getElementById('drawerItems').innerHTML = '<p class="cart-empty-msg">Sepetiniz boş.</p>';
+    footer.style.display = 'none';
+    return;
+  }
+  footer.style.display = 'block';
+  document.getElementById('drawerItems').innerHTML = cart.map(c => `
+    <div class="cart-item">
+      <img class="cart-item-img" src="${c.img}" alt="${c.name}" onerror="this.style.display='none'">
+      <div class="cart-item-info">
+        <div class="cart-item-name">${c.name}</div>
+        <div class="cart-item-wear">${c.wear}</div>
+      </div>
+      <span class="cart-item-price">${formatPrice(c.price)}</span>
+      <button class="remove-btn" onclick="removeFromCart(${c.id})">✕</button>
+    </div>`).join('');
+}
+
+function openCart() { document.getElementById('overlay').classList.add('open'); document.getElementById('drawer').classList.add('open'); }
+function closeCart() { document.getElementById('overlay').classList.remove('open'); document.getElementById('drawer').classList.remove('open'); }
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = '✓ ' + msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+// SIDEBAR FILTERS
+document.getElementById('categoryList').addEventListener('click', e => {
+  const li = e.target.closest('.filter-item');
+  if (!li) return;
+  document.querySelectorAll('#categoryList .filter-item').forEach(el => el.classList.remove('active'));
+  li.classList.add('active');
+  state.category = li.dataset.value;
+  loadItems();
+});
+document.getElementById('rarityList').addEventListener('click', e => {
+  const li = e.target.closest('.filter-item');
+  if (!li) return;
+  document.querySelectorAll('#rarityList .filter-item').forEach(el => el.classList.remove('active'));
+  li.classList.add('active');
+  state.rarity = li.dataset.value;
+  loadItems();
+});
+document.getElementById('sortSelect').addEventListener('change', e => { state.sort = e.target.value; loadItems(); });
+let searchTimeout;
+document.getElementById('searchInput').addEventListener('input', e => {
+  clearTimeout(searchTimeout);
+  searchTimeout = setTimeout(() => { state.q = e.target.value; loadItems(); }, 300);
+});
+document.getElementById('applyPrice').addEventListener('click', () => {
+  const min = parseFloat(document.getElementById('minPrice').value) || 0;
+  const max = parseFloat(document.getElementById('maxPrice').value) || Infinity;
+  const filtered = allItems.filter(i => i.price >= min && i.price <= max);
+  document.getElementById('resultsCount').textContent = filtered.length + ' ürün';
+  document.getElementById('itemsGrid').innerHTML = filtered.length ? filtered.map(renderCard).join('') : '<div class="no-results">Sonuç bulunamadı.</div>';
+});
+document.getElementById('cartBtn').addEventListener('click', openCart);
+document.getElementById('closeDrawer').addEventListener('click', closeCart);
+document.getElementById('overlay').addEventListener('click', closeCart);
+
+loadItems();
+</script>
+</body>
+</html>
