@@ -1,3 +1,15 @@
+import sqlite3
+import os
+
+# app.py'nin olduğu tam klasör yolunu bulur
+base_dir = os.path.abspath(os.path.dirname(__file__))
+db_path = os.path.join(base_dir, 'database.db')
+
+def get_db_connection():
+    # Bu fonksiyon her çağrıldığında veritabanına bağlanır
+    conn = sqlite3.connect(db_path)
+    conn.row_factory = sqlite3.Row
+    return conn
 from flask import Flask, render_template, jsonify, request, redirect, url_for, session
 import os
 from werkzeug.utils import secure_filename
