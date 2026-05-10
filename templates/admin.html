@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <title>Yönetim Paneli</title>
+    <style>
+        body { background: #0f1114; color: #c6d4df; font-family: sans-serif; padding: 2rem; }
+        .container { max-width: 600px; margin: auto; background: #171a21; padding: 20px; border-radius: 8px; }
+        .form-group { margin-bottom: 15px; }
+        input, select { width: 100%; padding: 8px; background: #1e2329; border: 1px solid #2a2d35; color: white; }
+        button { background: #66c0f4; color: white; padding: 10px 20px; border: none; cursor: pointer; width: 100%; }
+    </form>
+</head>
+<body>
+    <div class="container">
+        <h1>Yeni İtem Ekle</h1>
+        <form action="/admin/add" method="POST" enctype="multipart/form-data">
+            <div class="form-group"><label>İtem Adı:</label><input type="text" name="name" required></div>
+            <div class="form-group"><label>Kategori:</label>
+                <select name="category"><option value="Bıçak">Bıçak</option><option value="Silah Kını">Silah Kını</option></select>
+            </div>
+            <div class="form-group"><label>Fiyat ($):</label><input type="number" step="0.01" name="price" required></div>
+            <div class="form-group"><label>Nadirlik:</label>
+                <select name="rarity"><option value="Covert">Covert</option><option value="Classified">Classified</option></select>
+            </div>
+            <div class="form-group"><label>Fotoğraf Seç:</label><input type="file" name="photo" accept="image/*" required></div>
+            <button type="submit">Sisteme Ekle</button>
+        </form>
+        <br>
+        <a href="/" style="color: #8f98a0; text-decoration: none;">← Mağazaya Dön</a>
+    </div>
+</body>
+</html>
