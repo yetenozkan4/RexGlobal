@@ -105,6 +105,27 @@ def get_items():
     return jsonify(result)
 
 if __name__ == "__main__":
+   if __name__ == "__main__":
+    # Site açılmadan önce veritabanı tablosu yoksa oluşturur
+    conn = get_db_connection()
+    conn.execute('''
+        CREATE TABLE IF NOT EXISTS items (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL,
+            game TEXT,
+            category TEXT,
+            price REAL,
+            rarity TEXT,
+            img TEXT,
+            wear TEXT,
+            float REAL
+        )
+    ''')
+    conn.commit()
+    conn.close()
+    
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port)
     # Render portu buradan otomatik alır
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
