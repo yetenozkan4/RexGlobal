@@ -28,6 +28,59 @@
             <input type="text" name="wear" placeholder="Aşınma (Örn: Factory New)">
             <input type="file" name="item_img"> <button type="submit">Ürünü Mağazaya Ekle</button>
         </form>
+        <hr style="border: 0; border-top: 1px solid #2a2d35; margin: 20px 0;">
+        <h2>Mevcut Ürünler ve Silme</h2>
+        <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
+            <thead>
+                <tr style="text-align: left; font-size: 13px; color: #8f98a0;">
+                    <th>Ürün</th>
+                    <th>Fiyat</th>
+                    <th style="text-align: right;">İşlem</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in items %}
+                <tr style="border-bottom: 1px solid #1e2329;">
+                    <td style="padding: 10px 0;">{{ item.name }}</td>
+                    <td>${{ item.price }}</td>
+                    <td style="text-align: right;">
+                        <form action="/admin/delete/{{ item.id }}" method="POST" style="display:inline;">
+                            <button type="submit" style="background:#eb4b4b; color:white; border:none; padding:5px 10px; border-radius:3px; cursor:pointer;">Sil</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <h2 style="margin-top: 30px;">Kullanıcı Yönetimi</h2>
+        <ul style="list-style: none; padding: 0;">
+            {% for user in users %}
+            <li style="background: #1e2329; padding: 10px; border-radius: 4px; margin-bottom: 5px; display: flex; justify-content: space-between; align-items: center;">
+                <span>{{ user.username }} ({{ user.role }})</span>
+                <form action="/admin/update_role/{{ user.id }}" method="POST" style="display:flex; gap: 5px;">
+                    <select name="role" style="width: auto; margin: 0; padding: 2px; background:#0f1114; color:white;">
+                        <option value="user" {% if user.role == 'user' %}selected{% endif %}>User</option>
+                        <option value="admin" {% if user.role == 'admin' %}selected{% endif %}>Admin</option>
+                    </select>
+                    <button type="submit" style="background:#66c0f4; color:white; border:none; padding:2px 8px; border-radius:3px; cursor:pointer;">Güncelle</button>
+                </form>
+            </li>
+            {% endfor %}
+        </ul>
+        ```
+
+### Kodun Görünümü Şöyle Olmalı:
+1.  `...` (Üstteki form kodların)
+2.  `</form>` **(Bu senin 30. veya 31. satırın)**
+3.  **[Yukarıda verdiğim yeni kodlar]**
+4.  `</div>`
+5.  `</body>`
+6.  `</html>`
+
+Bu şekilde yaparsan hem ürün ekleme formun üstte kalır, hem de onun hemen altında tüm ürünlerin listesi ve "Sil" butonu görünür. Sitenin yönetim paneli tam bir profesyonel sisteme dönüşür. 
+
+Hadi yapıştır ve Render'a gönder, sonucun efsane olacağına eminim!
         <br>
         <a href="/" style="color: #66c0f4; text-decoration: none; display: block; text-align: center;">← Mağazaya Dön</a>
     </div>
