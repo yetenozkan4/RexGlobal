@@ -1,113 +1,30 @@
-import sqlite3
-import os
-
-# app.py'nin olduğu tam klasör yolunu bulur
-base_dir = os.path.abspath(os.path.dirname(__file__))
-db_path = os.path.join(base_dir, 'database.db')
-
-def get_db_connection():
-    # Bu fonksiyon her çağrıldığında veritabanına bağlanır
-    conn = sqlite3.connect(db_path)
-    conn.row_factory = sqlite3.Row
-    return conn
 from flask import Flask, render_template, jsonify, request, redirect, url_for, session
 import os
+import sqlite3
 from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
 app.secret_key = "rex_gizli_anahtar"
 
-UPLOAD_FOLDER = 'static/uploads'
+# Veritabanı ve Klasör Yolları
+base_dir = os.path.abspath(os.path.dirname(__file__))
+db_path = os.path.join(base_dir, 'database.db')
+UPLOAD_FOLDER = os.path.join(base_dir, 'static/uploads')
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
 
-# Başlangıç ürünleri (Burayı istediğin gibi çoğaltabilirsin)
-ITEMS = [
-    {"id": 1, "name": "AK-47 | Redline", "game": "Counter-Strike 2", "category": "Silah Kını", "price": 18.50, "rarity": "Classified", "img": "https://community.cloudflare.steamstatic.com/economy/image/fWFc82js0fmoRAP-qOIPu5THSWqfSmTELLqcUywGkijVjZULUrsm1j-9xgEPaQNMWZ8M3UFBOcpEj5VHCbknuQf-oJGplXNB4TKaPfYgCIBEYAivqFeOfepHMuDn0B4RdA", "discount": 0, "wear": "Field-Tested", "float": 0.23}
-]
+# Veritabanı Bağlantısı
+def get_db_connection():
+    conn = sqlite3.connect(db_path)
+    conn.row_factory = sqlite3.Row
+    return conn
 
-ADMIN_PASS = "admin123"
-
-def allowed_file(filename):
-    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
-
-@app.route("/")
-def index():
-    is_admin = session.get("is_admin", False)
-    # RENDER İÇİN: templates klasöründeki dosya adıyla BİREBİR AYNI olmalı (küçük harf!)
-    return render_template("index.html", is_admin=is_admin)
-
-@app.route("/login", methods=["GET", "POST"])
-def login():
-    if request.method == "POST":
-        if request.form.get("password") == ADMIN_PASS:
-            session["is_admin"] = True
-            return redirect(url_for("admin_panel")) # Giriş yapınca Admin Panele git
-    return render_template("login.html")
-
-# EKSİK OLAN VE 404 VERDİREN KISIM BURASIYDI:
-@app.route("/admin")
-def admin_panel():
-    if not session.get("is_admin"):
-        return redirect(url_for("login"))
-    return render_template("admin.html")
-
-@app.route("/logout")
-def logout():
-    session.pop("is_admin", None)
-    return redirect(url_for("index"))
-
-@app.route("/admin/add", methods=["POST"])
-def add_item():
-    if not session.get("is_admin"):
-        return "Yetkisiz Erişim", 403
+# Veritabanını ve Tabloları Başlat (Rol Sistemi Dahil)
+def init_db():
+    if not os.path.exists(UPLOAD_FOLDER):
+        os.makedirs(UPLOAD_FOLDER)
     
-    file = request.files.get('item_img')
-    img_url = ""
-    
-    if file and allowed_file(file.filename):
-        filename = secure_filename(file.filename)
-        # Render'da static/uploads klasörü yoksa hata verebilir, o yüzden kontrol ekledik
-        if not os.path.exists(app.config['UPLOAD_FOLDER']):
-            os.makedirs(app.config['UPLOAD_FOLDER'])
-        file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-        img_url = f"/static/uploads/{filename}"
-
-    new_item = {
-        "id": len(ITEMS) + 1,
-        "name": request.form.get("name"),
-        "game": "Counter-Strike 2",
-        "category": request.form.get("category"),
-        "price": float(request.form.get("price")),
-        "rarity": request.form.get("rarity"),
-        "img": img_url,
-        "discount": int(request.form.get("discount") or 0),
-        "wear": request.form.get("wear"),
-        "float": float(request.form.get("float") or 0)
-    }
-    ITEMS.append(new_item)
-    return redirect(url_for("index"))
-
-@app.route("/api/items")
-def get_items():
-    category = request.args.get("category", "all")
-    rarity = request.args.get("rarity", "all")
-    q = request.args.get("q", "").lower()
-    
-    result = ITEMS[:]
-    if category != "all":
-        result = [i for i in result if i["category"] == category]
-    if rarity != "all":
-        result = [i for i in result if i["rarity"] == rarity]
-    if q:
-        result = [i for i in result if q in i["name"].lower()]
-    
-    return jsonify(result)
-
-if __name__ == "__main__":
-   if __name__ == "__main__":
-    # Site açılmadan önce veritabanı tablosu yoksa oluşturur
     conn = get_db_connection()
+    # Ürünler Tablosu
     conn.execute('''
         CREATE TABLE IF NOT EXISTS items (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -118,14 +35,126 @@ if __name__ == "__main__":
             rarity TEXT,
             img TEXT,
             wear TEXT,
-            float REAL
+            float REAL,
+            discount INTEGER DEFAULT 0
+        )
+    ''')
+    # Kullanıcılar ve Roller Tablosu
+    conn.execute('''
+        CREATE TABLE IF NOT EXISTS users (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            username TEXT UNIQUE NOT NULL,
+            password TEXT NOT NULL,
+            role TEXT DEFAULT 'user' -- 'admin' veya 'user'
         )
     ''')
     conn.commit()
     conn.close()
+
+@app.route("/")
+def index():
+    is_admin = session.get("is_admin", False)
+    return render_template("index.html", is_admin=is_admin)
+
+# --- ÜRÜN YÖNETİMİ (SİLME DAHİL) ---
+
+@app.route("/api/items")
+def get_items():
+    category = request.args.get("category", "all")
+    rarity = request.args.get("rarity", "all")
+    q = request.args.get("q", "").lower()
     
-    port = int(os.environ.get("PORT", 5000))
-    app.run(host="0.0.0.0", port=port)
-    # Render portu buradan otomatik alır
+    conn = get_db_connection()
+    query = "SELECT * FROM items WHERE 1=1"
+    params = []
+    
+    if category != "all":
+        query += " AND category = ?"
+        params.append(category)
+    if rarity != "all":
+        query += " AND rarity = ?"
+        params.append(rarity)
+    if q:
+        query += " AND LOWER(name) LIKE ?"
+        params.append(f'%{q}%')
+        
+    items = conn.execute(query, params).fetchall()
+    conn.close()
+    return jsonify([dict(ix) for ix in items])
+
+@app.route("/admin/delete/<int:id>", methods=["POST"])
+def delete_item(id):
+    if not session.get("is_admin"):
+        return "Yetkisiz Erişim", 403
+    
+    conn = get_db_connection()
+    conn.execute("DELETE FROM items WHERE id = ?", (id,))
+    conn.commit()
+    conn.close()
+    return redirect(url_for("admin_panel"))
+
+# --- YÖNETİM PANELİ VE ROL SİSTEMİ ---
+
+@app.route("/admin")
+def admin_panel():
+    if not session.get("is_admin"):
+        return redirect(url_for("login"))
+    
+    conn = get_db_connection()
+    items = conn.execute("SELECT * FROM items").fetchall()
+    users = conn.execute("SELECT * FROM users").fetchall()
+    conn.close()
+    return render_template("admin.html", items=items, users=users)
+
+@app.route("/admin/update_role/<int:user_id>", methods=["POST"])
+def update_role(user_id):
+    if not session.get("is_admin"): return "Hata", 403
+    new_role = request.form.get("role")
+    
+    conn = get_db_connection()
+    conn.execute("UPDATE users SET role = ? WHERE id = ?", (new_role, user_id))
+    conn.commit()
+    conn.close()
+    return redirect(url_for("admin_panel"))
+
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    if request.method == "POST":
+        # Şimdilik basit şifre, ileride DB'den kullanıcı kontrolü yapılabilir
+        if request.form.get("password") == "admin123":
+            session["is_admin"] = True
+            return redirect(url_for("admin_panel"))
+    return render_template("login.html")
+
+@app.route("/logout")
+def logout():
+    session.clear()
+    return redirect(url_for("index"))
+
+# --- ÜRÜN EKLEME ---
+@app.route("/admin/add", methods=["POST"])
+def add_item():
+    if not session.get("is_admin"): return "Hata", 403
+    
+    file = request.files.get('item_img')
+    img_url = ""
+    if file:
+        filename = secure_filename(file.filename)
+        file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+        img_url = f"/static/uploads/{filename}"
+
+    conn = get_db_connection()
+    conn.execute('''INSERT INTO items 
+        (name, game, category, price, rarity, img, wear, float, discount) 
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)''',
+        (request.form.get("name"), "Counter-Strike 2", request.form.get("category"),
+         float(request.form.get("price")), request.form.get("rarity"), img_url,
+         request.form.get("wear"), float(request.form.get("float") or 0), 0))
+    conn.commit()
+    conn.close()
+    return redirect(url_for("admin_panel"))
+
+if __name__ == "__main__":
+    init_db() # Uygulama başlarken DB'yi hazırla
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
