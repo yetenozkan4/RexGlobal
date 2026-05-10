@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <title>RexGlobal - Giriş</title>
+    <style>
+        body { background: #0f1114; color: white; font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; }
+        .login-box { background: #171a21; padding: 2rem; border-radius: 8px; border: 1px solid #2a2d35; }
+        input { width: 100%; padding: 10px; margin: 10px 0; background: #1e2329; border: 1px solid #2a2d35; color: white; }
+        button { width: 100%; padding: 10px; background: #4c6b22; color: #a4d007; border: none; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <form class="login-box" method="POST" action="/login">
+        <h2>Admin Girişi</h2>
+        <input type="password" name="password" placeholder="Şifreyi Girin" required>
+        <button type="submit">Giriş Yap</button>
+    </form>
+</body>
+</html>
