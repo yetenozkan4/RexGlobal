@@ -11,7 +11,7 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 # --- ADMİN AYARLARI ---
 ADMIN_USER = "Administrator" 
-ADMIN_PASS = "GÖRMEMEN İÇİN SİLDİM" # <--- Kanka burayı silip kendi şifreni yaz!
+ADMIN_PASS = "BURAYA_SIFRENI_YAZ" # <--- Kanka şifreni buraya yazmayı unutma!
 # ----------------------
 
 DB_PATH = os.path.join(os.path.dirname(__file__), 'database.db')
@@ -41,7 +41,7 @@ def init_db():
         password TEXT,
         role TEXT DEFAULT 'user')''', commit=True)
         
-    # Ürünler Tablosu
+    # Ürünler Tablosu (Description alanı ile beraber)
     db_query('''CREATE TABLE IF NOT EXISTS products (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         name TEXT,
@@ -67,7 +67,6 @@ def init_db():
         db_query("INSERT INTO users (email, password, role) VALUES (?, ?, ?)", 
                  (ADMIN_USER, ADMIN_PASS, "administrator"), commit=True)
     else:
-        # Kod her başladığında veritabanındaki şifreyi yukarıdaki ADMIN_PASS ile eşitler
         db_query("UPDATE users SET password = ? WHERE email = ?", (ADMIN_PASS, ADMIN_USER), commit=True)
 
 with app.app_context():
@@ -96,6 +95,14 @@ def get_items():
                 "description": row['description']
             })
     return jsonify(items)
+
+# --- ÜRÜN DETAY SAYFASI (YENİ!) ---
+@app.route('/product/<int:id>')
+def product_detail(id):
+    product = db_query("SELECT * FROM products WHERE id = ?", (id,), one=True)
+    if not product:
+        return "Ürün Bulunamadı!", 404
+    return render_template('product_detail.html', product=product)
 
 # --- AUTH ---
 @app.route('/login', methods=['GET', 'POST'])
@@ -166,12 +173,13 @@ def delete_category(id):
     db_query("DELETE FROM categories WHERE id = ?", (id,), commit=True)
     return redirect(url_for('admin_panel'))
 
-# --- DİĞER ---
+# --- ANA SAYFA ---
 @app.route('/')
 def index():
     categories = db_query("SELECT * FROM categories")
     return render_template('index.html', categories=categories)
 
+# --- CHECKOUT ---
 @app.route('/checkout')
 def checkout():
     return render_template('checkout.html')
