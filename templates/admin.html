@@ -9,22 +9,23 @@
         h1 { color: white; margin-bottom: 30px; }
         h2 { color: white; border-bottom: 2px solid #2a2d35; padding-bottom: 10px; margin-top: 40px; }
         
-        /* Form Stilleri */
         .admin-section { background: #171a21; padding: 25px; border-radius: 8px; border: 1px solid #2a2d35; margin-top: 20px; }
         .add-form { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; }
-        input, select { background: #1e2329; border: 1px solid #2a2d35; color: white; padding: 12px; border-radius: 4px; outline: none; }
-        input:focus, select:focus { border-color: #66c0f4; }
         
+        input, select, textarea { background: #1e2329; border: 1px solid #2a2d35; color: white; padding: 12px; border-radius: 4px; outline: none; font-family: inherit; }
+        input:focus, select:focus, textarea:focus { border-color: #66c0f4; }
+        
+        /* Açıklama kutusu için özel stil */
+        .desc-area { grid-column: span 3; height: 100px; resize: vertical; }
+
         button { background: #4c6b22; color: #a4d007; border: none; padding: 12px; cursor: pointer; font-weight: bold; border-radius: 4px; transition: 0.2s; }
         button:hover { background: #5a7a28; }
-        .btn-danger { background: #a52a2a; color: #ffbaba; margin-left: 10px; padding: 5px 10px; font-size: 12px; }
+        .btn-danger { background: #a52a2a; color: #ffbaba; padding: 5px 10px; font-size: 12px; text-decoration: none; border-radius: 4px; display: inline-block; }
         .btn-danger:hover { background: #800000; }
 
-        /* Kategori Yönetim Alanı */
         .category-list { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 15px; }
         .category-tag { background: #2a3a50; color: #66c0f4; padding: 8px 15px; border-radius: 20px; display: flex; align-items: center; border: 1px solid #3d5a80; }
 
-        /* Tablo Stilleri */
         table { width: 100%; border-collapse: collapse; margin-top: 20px; background: #171a21; border-radius: 8px; overflow: hidden; }
         th, td { padding: 15px; text-align: left; border-bottom: 1px solid #2a2d35; }
         th { background: #1b2838; color: #66c0f4; }
@@ -36,21 +37,6 @@
     </style>
 </head>
 <body>
-    {% for p in products %}
-<tr>
-    <td><strong>{{ p.name }}</strong></td>
-    <td><span class="badge">{{ p.category }}</span></td>
-    <td>{{ "{:,.2f}".format(p.price) }} TL</td>
-    <td>
-        <a href="/admin/delete_product/{{ p.id }}" 
-           class="btn-danger" 
-           style="text-decoration:none; padding:5px 10px; border-radius:4px;" 
-           onclick="return confirm('Bu ürünü kalıcı olarak silmek istediğine emin misin kanka?')">
-           Ürünü Sil
-        </a>
-    </td>
-</tr>
-{% endfor %}
     <div class="admin-container">
         <a href="/" class="back-btn">← Mağazaya Dön</a>
         <h1>Yönetim Paneli</h1>
@@ -66,11 +52,10 @@
                 {% for cat in categories %}
                 <div class="category-tag">
                     {{ cat.name }}
-                    <a href="/admin/delete_category/{{ cat.id }}" class="btn-danger" style="text-decoration: none; border-radius: 50%;" onclick="return confirm('Bu kategoriyi silmek istediğine emin misin kanka?')">✕</a>
+                    <a href="/admin/delete_category/{{ cat.id }}" class="btn-danger" style="margin-left:8px; border-radius: 50%; padding: 2px 7px;" onclick="return confirm('Bu kategoriyi silmek istediğine emin misin kanka?')">✕</a>
                 </div>
                 {% endfor %}
             </div>
-            <p style="font-size: 12px; color: #8f98a0; margin-top: 10px;">* Bir kategoriyi sildiğinde, o kategorideki ürünler ana sayfada "Tümü" kısmında görünmeye devam eder.</p>
         </div>
 
         <h2>Yeni Ürün Ekle</h2>
@@ -86,6 +71,9 @@
                 </select>
                 
                 <input type="number" name="price" placeholder="Fiyat (TL)" step="0.01" required>
+                
+                <textarea name="description" placeholder="Ürün açıklaması kanka..." class="desc-area"></textarea>
+                
                 <input type="file" name="img" accept="image/*" required style="grid-column: span 2;">
                 <button type="submit" style="grid-column: span 1;">Ürünü Sisteme Ekle</button>
             </form>
@@ -98,6 +86,7 @@
                     <th>Ürün</th>
                     <th>Kategori</th>
                     <th>Fiyat</th>
+                    <th>İşlem</th>
                 </tr>
             </thead>
             <tbody>
@@ -106,6 +95,13 @@
                     <td><strong>{{ p.name }}</strong></td>
                     <td><span class="badge">{{ p.category }}</span></td>
                     <td>{{ "{:,.2f}".format(p.price) }} TL</td>
+                    <td>
+                        <a href="/admin/delete_product/{{ p.id }}" 
+                           class="btn-danger" 
+                           onclick="return confirm('Bu ürünü silmek istediğine emin misin kanka?')">
+                           Ürünü Sil
+                        </a>
+                    </td>
                 </tr>
                 {% endfor %}
             </tbody>
