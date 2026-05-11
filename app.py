@@ -9,17 +9,21 @@ app.secret_key = "rexglobal_secret_key"
 UPLOAD_FOLDER = 'static/uploads'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
-# Veritabanı Bağlantı Yardımcısı (Kod tekrarını engeller)
+# Veritabanı Bağlantı Yardımcısı
 def db_query(query, params=(), one=False, commit=False):
-    conn = sqlite3.connect('database.db')
+    # Veritabanı yolu Render için tam yol olarak belirtildi
+    db_path = os.path.join(os.path.dirname(__file__), 'database.db')
+    conn = sqlite3.connect(db_path)
     conn.row_factory = sqlite3.Row
-    cur = conn.execute(query, params)
-    if commit:
-        conn.commit()
-        res = cur.lastrowid
-    else:
-        res = cur.fetchone() if one else cur.fetchall()
-    conn.close()
+    try:
+        cur = conn.execute(query, params)
+        if commit:
+            conn.commit()
+            res = cur.lastrowid
+        else:
+            res = cur.fetchone() if one else cur.fetchall()
+    finally:
+        conn.close()
     return res
 
 # Tabloları Hazırla
@@ -39,16 +43,30 @@ def init_db():
         discount_end DATETIME,
         img TEXT)''', commit=True)
 
-# --- AUTH SİSTEMİ ---
-@app.route('/register', methods=['POST'])
-def register():
-    email = request.form.get('email')
-    password = request.form.get('password')
-    try:
-        db_query("INSERT INTO users (email, password) VALUES (?, ?)", (email, password), commit=True)
-        return redirect(url_for('login_page'))
-    except: return "Bu e-posta zaten kayıtlı!", 400
+# --- API (JS İÇİN GEREKLİ) ---
+@app.route('/api/items')
+def get_items():
+    category = request.args.get('category', 'all')
+    search = request.args.get('q', '').lower()
+    
+    if category == 'all':
+        rows = db_query("SELECT * FROM products")
+    else:
+        rows = db_query("SELECT * FROM products WHERE category = ?", (category,))
+    
+    items = []
+    for row in rows:
+        if search in row['name'].lower():
+            items.append({
+                "id": row['id'],
+                "name": row['name'],
+                "price": row['price'],
+                "img": row['img'],
+                "category": row['category']
+            })
+    return jsonify(items)
 
+# --- AUTH SİSTEMİ ---
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
@@ -59,7 +77,6 @@ def login():
             session['user_id'] = user['id']
             session['email'] = user['email']
             session['role'] = user['role']
-            # ÖZEL KURAL: Belirttiğin mail otomatik admin olur
             if email == "admin@rexglobal.com" and password == "admin123":
                 db_query("UPDATE users SET role = 'administrator' WHERE email = ?", (email,), commit=True)
                 session['role'] = 'administrator'
@@ -96,42 +113,14 @@ def add_product():
              (name, cat, price, img_path), commit=True)
     return redirect(url_for('admin_panel'))
 
-@app.route('/admin/set_discount/<int:id>', methods=['POST'])
-def set_discount(id):
-    d_price = request.form.get('discount_price')
-    d_end = request.form.get('discount_end') # Format: 2026-05-20T18:00
-    db_query("UPDATE products SET discount_price = ?, discount_end = ? WHERE id = ?", 
-             (d_price, d_end, id), commit=True)
-    return redirect(url_for('admin_panel'))
-
-# --- SEPET & ÖDEME ---
-@app.route('/cart/add/<int:id>')
-def add_to_cart(id):
-    cart = session.get('cart', [])
-    cart.append(id)
-    session['cart'] = cart
-    return redirect(url_for('index'))
-
-@app.route('/checkout')
-def checkout():
-    if 'user_id' not in session: return redirect(url_for('login'))
-    # Sepetteki ürünleri çek
-    cart_ids = session.get('cart', [])
-    items = []
-    total = 0
-    for cid in cart_ids:
-        p = db_query("SELECT * FROM products WHERE id = ?", (cid,), one=True)
-        if p: 
-            items.append(p)
-            total += p['discount_price'] if p['discount_price'] else p['price']
-    return render_template('checkout.html', items=items, total=total)
-
+# --- ANA SAYFA ---
 @app.route('/')
 def index():
-    # Session verilerini çekip HTML'e gönderiyoruz
     products = db_query("SELECT * FROM products")
-    return render_template('index.html', products=products, session=session)
+    return render_template('index.html', products=products)
 
+# --- RENDER UYUMLU ÇALIŞTIRICI ---
 if __name__ == "__main__":
     init_db()
-    app.run(debug=True)
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host='0.0.0.0', port=port)
