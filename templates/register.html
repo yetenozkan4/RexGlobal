@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <title>Kayıt Ol — RexGlobal</title>
+    <style>
+        body { background: #0f1114; color: white; font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .login-box { background: #171a21; padding: 2.5rem; border-radius: 8px; border: 1px solid #2a2d35; width: 100%; max-width: 400px; }
+        input { width: 100%; padding: 12px; margin-bottom: 1.5rem; background: #1e2329; border: 1px solid #2a2d35; color: white; border-radius: 4px; outline: none; }
+        button { width: 100%; padding: 12px; background: #4c6b22; color: #a4d007; border: none; cursor: pointer; font-weight: bold; border-radius: 4px; }
+        .footer-links { margin-top: 1.5rem; text-align: center; font-size: 13px; color: #8f98a0; }
+        .footer-links a { color: #66c0f4; text-decoration: none; }
+    </style>
+</head>
+<body>
+    <div class="login-box">
+        <form method="POST" action="/register">
+            <h2 style="text-align:center;">Rex<span>Global</span> Kayıt Ol</h2>
+            <label style="display:block; margin-bottom:5px; font-size:13px; color:#8f98a0;">E-Posta Adresi</label>
+            <input type="email" name="email" placeholder="E-Posta Adresinizi Giriniz" required>
+            <label style="display:block; margin-bottom:5px; font-size:13px; color:#8f98a0;">Şifre</label>
+            <input type="password" name="password" placeholder="Şifrenizi Belirleyiniz" required>
+            <button type="submit">Kayıt Ol Ve Hesabı Oluştur</button>
+        </form>
+        <div class="footer-links">
+            <p>Zaten Hesabınız Var Mı? <a href="/login">Giriş Yapın</a></p>
+        </div>
+    </div>
+</body>
+</html>
