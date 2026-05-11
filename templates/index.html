@@ -47,7 +47,8 @@
   .overlay.open { opacity: 1; pointer-events: all; }
   .drawer { position: fixed; top: 0; right: 0; width: 360px; height: 100%; background: #171a21; border-left: 1px solid #2a2d35; z-index: 201; display: flex; flex-direction: column; transform: translateX(100%); transition: transform .2s; }
   .drawer.open { transform: translateX(0); }
-  .cart-item { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #2a2d35; font-size: 13px; }
+  .cart-item { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #2a2d35; font-size: 13px; align-items: center; }
+  .remove-item { color: #ff4444; cursor: pointer; font-weight: bold; margin-left: 10px; }
 </style>
 </head>
 <body>
@@ -124,7 +125,8 @@
 
 <script>
 let state = { category: 'all', q: '' };
-let cart = [];
+// DEĞİŞİKLİK: Sepeti localStorage'dan çekiyoruz, yoksa boş dizi.
+let cart = JSON.parse(localStorage.getItem('rexCart')) || [];
 let allItems = [];
 
 async function loadItems() {
@@ -141,8 +143,9 @@ async function loadItems() {
         return;
     }
 
+    // DEĞİŞİKLİK: onclick artık detay sayfasına (window.location.href) yönlendiriyor.
     grid.innerHTML = items.map(item => `
-        <div class="card" onclick="addToCart(${item.id})">
+        <div class="card" onclick="window.location.href='/product/${item.id}'">
             <div class="card-img-wrap">
                 <img src="${item.img}" alt="${item.name}">
             </div>
@@ -154,23 +157,25 @@ async function loadItems() {
     `).join('');
 }
 
-function addToCart(id) {
-    const item = allItems.find(i => i.id === id);
-    if(item) {
-        cart.push(item);
-        updateCartUI();
-    }
-}
-
+// DEĞİŞİKLİK: UI güncellemesi ve localStorage kaydı
 function updateCartUI() {
+    localStorage.setItem('rexCart', JSON.stringify(cart));
     document.getElementById('cartCount').textContent = cart.length;
     const drawerItems = document.getElementById('drawerItems');
-    drawerItems.innerHTML = cart.map(item => `
+    drawerItems.innerHTML = cart.map((item, index) => `
         <div class="cart-item">
-            <span>${item.name}</span>
-            <span style="color: #a4d007;">${item.price.toLocaleString('tr-TR')} TL</span>
+            <div>
+              <div style="font-weight:600;">${item.name}</div>
+              <div style="color: #a4d007; font-size: 12px;">${item.price.toLocaleString('tr-TR')} TL</div>
+            </div>
+            <span class="remove-item" onclick="removeFromCart(${index})">❌</span>
         </div>
     `).join('');
+}
+
+function removeFromCart(index) {
+    cart.splice(index, 1);
+    updateCartUI();
 }
 
 function openCart() { 
@@ -197,6 +202,8 @@ document.getElementById('searchInput').addEventListener('input', e => {
     loadItems();
 });
 
+// Sayfa ilk açıldığında sepeti UI'a bas
+updateCartUI();
 loadItems();
 </script>
 </body>
