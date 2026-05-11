@@ -11,7 +11,7 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 # --- ADMİN AYARLARI ---
 ADMIN_USER = "Administrator" 
-ADMIN_PASS = "GİZLİ" 
+ADMIN_PASS = "adminrex" # <--- Kanka burayı silip kendi şifreni yaz!
 # ----------------------
 
 DB_PATH = os.path.join(os.path.dirname(__file__), 'database.db')
@@ -47,18 +47,28 @@ def init_db():
         name TEXT,
         category TEXT,
         price REAL,
-        img TEXT)''', commit=True)
+        img TEXT,
+        description TEXT)''', commit=True)
 
-    # KATEGORİLER TABLOSU (YENİ)
+    # Tablo Güncelleme (Description yoksa ekle)
+    try:
+        db_query("ALTER TABLE products ADD COLUMN description TEXT", commit=True)
+    except:
+        pass
+
+    # Kategoriler Tablosu
     db_query('''CREATE TABLE IF NOT EXISTS categories (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         name TEXT UNIQUE)''', commit=True)
     
-    # Admin Hesabı Kontrolü
+    # Admin Kontrol ve Şifre Force Update
     admin_check = db_query("SELECT * FROM users WHERE email = ?", (ADMIN_USER,), one=True)
     if not admin_check:
         db_query("INSERT INTO users (email, password, role) VALUES (?, ?, ?)", 
                  (ADMIN_USER, ADMIN_PASS, "administrator"), commit=True)
+    else:
+        # Kod her başladığında veritabanındaki şifreyi yukarıdaki ADMIN_PASS ile eşitler
+        db_query("UPDATE users SET password = ? WHERE email = ?", (ADMIN_PASS, ADMIN_USER), commit=True)
 
 with app.app_context():
     init_db()
@@ -82,11 +92,12 @@ def get_items():
                 "name": row['name'],
                 "price": row['price'],
                 "img": row['img'],
-                "category": row['category']
+                "category": row['category'],
+                "description": row['description']
             })
     return jsonify(items)
 
-# --- AUTH SİSTEMİ ---
+# --- AUTH ---
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
@@ -99,48 +110,54 @@ def login():
             session['role'] = user['role']
             return redirect(url_for('index'))
         else:
-            return "Giriş Başarısız! Kullanıcı Adı Veya Şifre Hatalı.", 401
+            return "Giriş Başarısız! Hatalı Bilgi.", 401
     return render_template('login.html')
-
-@app.route('/register', methods=['GET', 'POST'])
-def register():
-    if request.method == 'POST':
-        email = request.form.get('email')
-        password = request.form.get('password')
-        if email != ADMIN_USER and "@" not in email:
-            return "Hata: Geçerli Bir E-Posta Adresi Girmeniz Gerekmektedir!", 400
-        try:
-            db_query("INSERT INTO users (email, password, role) VALUES (?, ?, ?)", 
-                     (email, password, 'user'), commit=True)
-            return redirect(url_for('login'))
-        except:
-            return "Bu Kullanıcı Adı Veya E-Posta Zaten Kayıtlı!", 400
-    return render_template('register.html')
 
 @app.route('/logout')
 def logout():
     session.clear()
     return redirect(url_for('index'))
 
-# --- ADMİN PANELİ VE KATEGORİ YÖNETİMİ ---
+# --- ADMİN İŞLEMLERİ ---
 @app.route('/admin')
 def admin_panel():
-    if session.get('role') != 'administrator':
-        return "Yetkisiz Erişim!", 403
+    if session.get('role') != 'administrator': return "Yetkisiz!", 403
     products = db_query("SELECT * FROM products")
     users = db_query("SELECT * FROM users")
-    categories = db_query("SELECT * FROM categories") # Kategorileri çek
+    categories = db_query("SELECT * FROM categories")
     return render_template('admin.html', products=products, users=users, categories=categories)
+
+@app.route('/admin/add_product', methods=['POST'])
+def add_product():
+    if session.get('role') != 'administrator': return "Yetkisiz!", 403
+    name = request.form.get('name')
+    cat = request.form.get('category')
+    price = request.form.get('price')
+    desc = request.form.get('description')
+    file = request.files.get('img')
+    img_path = "/static/uploads/no-image.png"
+    if file:
+        filename = secure_filename(file.filename)
+        file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+        img_path = f"/static/uploads/{filename}"
+    
+    db_query("INSERT INTO products (name, category, price, img, description) VALUES (?, ?, ?, ?, ?)", 
+             (name, cat, price, img_path, desc), commit=True)
+    return redirect(url_for('admin_panel'))
+
+@app.route('/admin/delete_product/<int:id>')
+def delete_product(id):
+    if session.get('role') != 'administrator': return "Yetkisiz!", 403
+    db_query("DELETE FROM products WHERE id = ?", (id,), commit=True)
+    return redirect(url_for('admin_panel'))
 
 @app.route('/admin/add_category', methods=['POST'])
 def add_category():
     if session.get('role') != 'administrator': return "Yetkisiz!", 403
     cat_name = request.form.get('category_name')
     if cat_name:
-        try:
-            db_query("INSERT INTO categories (name) VALUES (?)", (cat_name,), commit=True)
-        except:
-            pass
+        try: db_query("INSERT INTO categories (name) VALUES (?)", (cat_name,), commit=True)
+        except: pass
     return redirect(url_for('admin_panel'))
 
 @app.route('/admin/delete_category/<int:id>')
@@ -149,33 +166,15 @@ def delete_category(id):
     db_query("DELETE FROM categories WHERE id = ?", (id,), commit=True)
     return redirect(url_for('admin_panel'))
 
-@app.route('/admin/add_product', methods=['POST'])
-def add_product():
-    if session.get('role') != 'administrator': return "Yetkisiz!", 403
-    name = request.form.get('name')
-    cat = request.form.get('category')
-    price = request.form.get('price')
-    file = request.files.get('img')
-    img_path = "/static/uploads/no-image.png"
-    if file:
-        filename = secure_filename(file.filename)
-        file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-        img_path = f"/static/uploads/{filename}"
-    
-    db_query("INSERT INTO products (name, category, price, img) VALUES (?, ?, ? , ?)", 
-             (name, cat, price, img_path), commit=True)
-    return redirect(url_for('admin_panel'))
-
-# --- ANA SAYFA ---
+# --- DİĞER ---
 @app.route('/')
 def index():
-    categories = db_query("SELECT * FROM categories") # Kategorileri menü için çek
+    categories = db_query("SELECT * FROM categories")
     return render_template('index.html', categories=categories)
 
-# --- CHECKOUT ---
 @app.route('/checkout')
 def checkout():
-    return render_template('checkout.html', items=[], total=0)
+    return render_template('checkout.html')
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
