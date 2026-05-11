@@ -1,29 +1,85 @@
-<h2>Ürün Yönetimi</h2>
-<form action="/admin/add_product" method="POST" enctype="multipart/form-data">
-    <input type="text" name="name" placeholder="Ürün Adı" required>
-    <input type="text" name="category" placeholder="Kategori">
-    <input type="number" name="price" placeholder="Fiyat">
-    <input type="file" name="img">
-    <button type="submit">Ekle</button>
-</form>
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <title>Yönetim Paneli — RexGlobal</title>
+    <style>
+        body { font-family: sans-serif; background: #0f1114; color: #c6d4df; padding: 40px; margin: 0; }
+        .admin-container { max-width: 1000px; margin: 0 auto; }
+        h2 { color: white; border-bottom: 2px solid #2a2d35; padding-bottom: 10px; margin-top: 40px; }
+        
+        /* Form Stilleri */
+        .add-form { background: #171a21; padding: 20px; border-radius: 8px; border: 1px solid #2a2d35; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; }
+        input, select { background: #1e2329; border: 1px solid #2a2d35; color: white; padding: 10px; border-radius: 4px; }
+        button { background: #4c6b22; color: #a4d007; border: none; padding: 10px; cursor: pointer; font-weight: bold; border-radius: 4px; }
+        button:hover { background: #5a7a28; }
 
-<table>
-    {% for p in products %}
-    <tr>
-        <td>{{ p.name }}</td>
-        <td>{{ p.price }} TL</td>
-        <td>
-            <form action="/admin/set_discount/{{ p.id }}" method="POST">
-                <input type="number" name="discount_price" placeholder="İndirimli Fiyat">
-                <input type="datetime-local" name="discount_end">
-                <button type="submit">İndirim Tanımla</button>
-            </form>
-        </td>
-    </tr>
-    {% endfor %}
-</table>
+        /* Tablo Stilleri */
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; background: #171a21; }
+        th, td { padding: 15px; text-align: left; border-bottom: 1px solid #2a2d35; }
+        th { background: #1b2838; color: #66c0f4; }
+        .discount-form { display: flex; gap: 5px; }
+        .discount-form input { width: 120px; font-size: 12px; }
+        
+        .user-card { background: #1b2838; padding: 10px; margin-bottom: 5px; border-radius: 4px; border-left: 4px solid #66c0f4; }
+        .badge { background: #4a5568; padding: 2px 8px; border-radius: 10px; font-size: 11px; }
+        .back-btn { color: #66c0f4; text-decoration: none; margin-bottom: 20px; display: inline-block; }
+    </style>
+</head>
+<body>
+    <div class="admin-container">
+        <a href="/" class="back-btn">← Mağazaya Dön</a>
+        <h1>Yönetim Paneli</h1>
 
-<h2>Kullanıcı Rolleri</h2>
-{% for u in users %}
-    <p>{{ u.email }} - Rol: {{ u.role }}</p>
-{% endfor %}
+        <h2>Yeni Ürün Ekle</h2>
+        <form action="/admin/add_product" method="POST" enctype="multipart/form-data" class="add-form">
+            <input type="text" name="name" placeholder="Ürün Adı (Örn: AK-47 Asimov)" required>
+            <select name="category">
+                <option value="Tüfekler">Tüfekler</option>
+                <option value="Bıçaklar">Bıçaklar</option>
+                <option value="Eldivenler">Eldivenler</option>
+            </select>
+            <input type="number" name="price" placeholder="Fiyat (TL)" step="0.01" required>
+            <input type="file" name="img" accept="image/*" required>
+            <button type="submit" style="grid-column: span 3;">Ürünü Sisteme Ekle</button>
+        </form>
+
+        <h2>Mevcut Ürünler ve İndirim Yönetimi</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Ürün</th>
+                    <th>Kategori</th>
+                    <th>Normal Fiyat</th>
+                    <th>İndirim Tanımla</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for p in products %}
+                <tr>
+                    <td><strong>{{ p.name }}</strong></td>
+                    <td><span class="badge">{{ p.category }}</span></td>
+                    <td>{{ "{:,.2f}".format(p.price) }} TL</td>
+                    <td>
+                        <form action="/admin/set_discount/{{ p.id }}" method="POST" class="discount-form">
+                            <input type="number" name="discount_price" placeholder="İnd. Fiyat" step="0.01">
+                            <input type="datetime-local" name="discount_end">
+                            <button type="submit" style="background: #2a3a50; color: #66c0f4; padding: 5px 10px;">Uygula</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <h2>Kullanıcı Listesi</h2>
+        <div style="margin-top: 20px;">
+            {% for u in users %}
+            <div class="user-card">
+                {{ u.email }} — <span style="color: #a4d007;">{{ u.role }}</span>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</body>
+</html>
