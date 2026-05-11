@@ -36,6 +36,21 @@
     </style>
 </head>
 <body>
+    {% for p in products %}
+<tr>
+    <td><strong>{{ p.name }}</strong></td>
+    <td><span class="badge">{{ p.category }}</span></td>
+    <td>{{ "{:,.2f}".format(p.price) }} TL</td>
+    <td>
+        <a href="/admin/delete_product/{{ p.id }}" 
+           class="btn-danger" 
+           style="text-decoration:none; padding:5px 10px; border-radius:4px;" 
+           onclick="return confirm('Bu ürünü kalıcı olarak silmek istediğine emin misin kanka?')">
+           Ürünü Sil
+        </a>
+    </td>
+</tr>
+{% endfor %}
     <div class="admin-container">
         <a href="/" class="back-btn">← Mağazaya Dön</a>
         <h1>Yönetim Paneli</h1>
