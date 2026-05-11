@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ product.name }} - RexGlobal</title>
+    <style>
+        body { background: #0f1114; color: #c6d4df; font-family: 'Motiva Sans', Sans-serif; padding: 50px; margin: 0; }
+        .container { max-width: 1000px; margin: 0 auto; display: flex; gap: 40px; background: rgba(23, 26, 33, 0.8); padding: 40px; border-radius: 4px; border: 1px solid #2a2d35; }
+        .product-img { width: 400px; height: 400px; object-fit: contain; background: #000; border-radius: 4px; border: 1px solid #1b2838; }
+        .info { flex: 1; }
+        h1 { color: white; font-size: 28px; margin-top: 0; }
+        .price { font-size: 32px; color: #a4d007; font-weight: bold; margin: 20px 0; }
+        .description { color: #acb2b8; line-height: 1.6; font-size: 15px; margin-bottom: 30px; background: #101216; padding: 15px; border-radius: 4px; }
+        .add-btn { background: linear-gradient( to bottom, #799905 5%, #536904 95%); color: #d2efa9; border: none; padding: 15px 40px; font-weight: bold; border-radius: 2px; cursor: pointer; font-size: 18px; }
+        .add-btn:hover { background: linear-gradient( to bottom, #a4d007 5%, #536904 95%); color: white; }
+        .back-link { color: #66c0f4; text-decoration: none; margin-bottom: 20px; display: inline-block; }
+    </style>
+</head>
+<body>
+    <div style="max-width: 1000px; margin: 0 auto;">
+        <a href="/" class="back-link">← Mağazaya Dön</a>
+    </div>
+    
+    <div class="container">
+        <img src="{{ product.img }}" class="product-img" alt="{{ product.name }}">
+        <div class="info">
+            <h1>{{ product.name }}</h1>
+            <div class="price">{{ "{:,.2f}".format(product.price) }} TL</div>
+            <div class="description">
+                <strong>Ürün Hakkında Açıklama:</strong><br><br>
+                {{ product.description if product.description else "Bu ürün için henüz bir açıklama eklenmemiş kanka." }}
+            </div>
+            <button class="add-btn" onclick="addToCart()">SEPETE EKLE</button>
+        </div>
+    </div>
+
+    <script>
+        function addToCart() {
+            // LocalStorage'dan mevcut sepeti al
+            let cart = JSON.parse(localStorage.getItem('rexCart')) || [];
+            
+            // Yeni ürünü ekle
+            cart.push({
+                id: "{{ product.id }}",
+                name: "{{ product.name }}",
+                price: {{ product.price }},
+                img: "{{ product.img }}"
+            });
+            
+            // Güncel sepeti kaydet
+            localStorage.setItem('rexCart', JSON.stringify(cart));
+            
+            alert("Ürün başarıyla sepete eklendi!");
+            window.location.href = "/"; // Ana sayfaya dön
+        }
+    </script>
+</body>
+</html>
