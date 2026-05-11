@@ -90,6 +90,35 @@ nav a {
 </head>
 <body>
 
+  <h2>Ürün Yönetimi</h2>
+<form action="/admin/add_product" method="POST" enctype="multipart/form-data">
+    <input type="text" name="name" placeholder="Ürün Adı" required>
+    <input type="text" name="category" placeholder="Kategori">
+    <input type="number" name="price" placeholder="Fiyat">
+    <input type="file" name="img">
+    <button type="submit">Ekle</button>
+</form>
+
+<table>
+    {% for p in products %}
+    <tr>
+        <td>{{ p.name }}</td>
+        <td>{{ p.price }} TL</td>
+        <td>
+            <form action="/admin/set_discount/{{ p.id }}" method="POST">
+                <input type="number" name="discount_price" placeholder="İndirimli Fiyat">
+                <input type="datetime-local" name="discount_end">
+                <button type="submit">İndirim Tanımla</button>
+            </form>
+        </td>
+    </tr>
+    {% endfor %}
+</table>
+
+<h2>Kullanıcı Rolleri</h2>
+{% for u in users %}
+    <p>{{ u.email }} - Rol: {{ u.role }}</p>
+{% endfor %}
 <nav class="topbar">
   <a href="/" class="logo">Rex<span>Global</span></a>
   <div class="topbar-links">
