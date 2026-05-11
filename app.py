@@ -11,7 +11,7 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 # --- ADMİN AYARLARI ---
 ADMIN_USER = "Administrator" 
-ADMIN_PASS = "AdminRexGlobal" 
+ADMIN_PASS = "adminrex" 
 # ----------------------
 
 DB_PATH = os.path.join(os.path.dirname(__file__), 'database.db')
