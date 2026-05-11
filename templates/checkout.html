@@ -2,43 +2,118 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ödeme Yap — RexGlobal</title>
     <style>
-        body { font-family: sans-serif; background: #0f1114; color: #c6d4df; padding: 50px; }
-        .checkout-container { max-width: 800px; margin: 0 auto; background: #171a21; padding: 30px; border-radius: 8px; border: 1px solid #2a2d35; }
-        h1 { color: white; border-bottom: 1px solid #2a2d35; padding-bottom: 15px; }
-        .item-row { display: flex; justify-content: space-between; padding: 15px 0; border-bottom: 1px solid #1e2329; }
-        .total-box { margin-top: 20px; text-align: right; font-size: 20px; color: #a4d007; font-weight: bold; }
-        .pay-button { display: block; width: 100%; padding: 15px; background: #4c6b22; color: #a4d007; border: none; font-size: 18px; font-weight: bold; cursor: pointer; border-radius: 4px; margin-top: 30px; text-decoration: none; text-align: center; }
-        .pay-button:hover { background: #5a7a28; }
-        .back-link { color: #66c0f4; text-decoration: none; font-size: 14px; display: inline-block; margin-bottom: 20px; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0f1114; color: #c6d4df; padding: 40px; margin: 0; }
+        .checkout-container { max-width: 900px; margin: 0 auto; display: grid; grid-template-columns: 1fr 350px; gap: 30px; }
+        h1 { color: white; grid-column: span 2; margin-bottom: 20px; }
+        
+        .checkout-box { background: #171a21; padding: 25px; border-radius: 8px; border: 1px solid #2a2d35; }
+        .order-summary { background: #1b2838; padding: 20px; border-radius: 8px; border: 1px solid #2a3a50; height: fit-content; }
+        
+        .cart-item { display: flex; align-items: center; gap: 15px; padding: 15px 0; border-bottom: 1px solid #2a2d35; }
+        .cart-item img { width: 60px; height: 60px; object-fit: contain; background: #1e2329; border-radius: 4px; }
+        .cart-item-info { flex: 1; }
+        .cart-item-name { font-weight: 600; color: white; font-size: 14px; }
+        .cart-item-price { color: #a4d007; font-size: 13px; margin-top: 4px; }
+        
+        .total-row { display: flex; justify-content: space-between; margin-top: 20px; font-size: 18px; font-weight: bold; color: white; }
+        
+        input, select { width: 100%; background: #1e2329; border: 1px solid #2a2d35; color: white; padding: 12px; border-radius: 4px; margin-bottom: 15px; outline: none; }
+        button { width: 100%; padding: 15px; background: #a4d007; color: #1a1a1a; border: none; cursor: pointer; font-weight: bold; border-radius: 4px; font-size: 16px; margin-top: 10px; }
+        button:hover { background: #b8e60a; }
+        
+        .empty-msg { text-align: center; padding: 50px; color: #8f98a0; grid-column: span 2; }
+        .back-link { color: #66c0f4; text-decoration: none; display: inline-block; margin-bottom: 20px; }
     </style>
 </head>
 <body>
-    <div class="checkout-container">
-        <a href="/" class="back-link">← Alışverişe Devam Et</a>
-        <h1>Sipariş Özeti</h1>
-        
-        <div class="items-list">
-            {% if items %}
-                {% for item in items %}
-                <div class="item-row">
-                    <span>{{ item.name }}</span>
-                    <span>{{ "{:,.2f}".format(item.discount_price if item.discount_price else item.price) }} TL</span>
+
+<div class="checkout-container">
+    <a href="/" class="back-link">← Alışverişe Devam Et</a>
+    <h1>Güvenli Ödeme Sayfası</h1>
+
+    <div id="checkoutContent" style="display: contents;">
+        <div class="checkout-box">
+            <h3 style="color:white; margin-top:0;">Teslimat Bilgileri</h3>
+            <input type="text" placeholder="Adınız Soyadınız" required>
+            <input type="email" placeholder="E-Posta Adresiniz" required>
+            <input type="text" placeholder="Steam Takas Linkiniz (Trade URL)" required>
+            
+            <h3 style="color:white; margin-top:20px;">Ödeme Yöntemi</h3>
+            <select>
+                <option>Kredi / Banka Kartı</option>
+                <option>Papara / IBAN</option>
+                <option>Kripto Para</option>
+            </select>
+            <input type="text" placeholder="Kart Numarası">
+            <div style="display:flex; gap:10px;">
+                <input type="text" placeholder="AA/YY">
+                <input type="text" placeholder="CVV">
+            </div>
+            <button onclick="completeOrder()">Siparişi Onayla Ve Öde</button>
+        </div>
+
+        <div class="order-summary">
+            <h3 style="color:white; margin-top:0;">Sipariş Özeti</h3>
+            <div id="cartList">
                 </div>
-                {% endfor %}
-            {% else %}
-                <p style="padding: 20px 0;">Sepetiniz şu an boş.</p>
-            {% endif %}
+            <div class="total-row">
+                <span>Toplam:</span>
+                <span id="totalPrice" style="color: #a4d007;">0.00 TL</span>
+            </div>
         </div>
-
-        <div class="total-box">
-            Toplam Tutar: {{ "{:,.2f}".format(total) }} TL
-        </div>
-
-        {% if items %}
-            <button class="pay-button" onclick="alert('Ödeme sistemi yakında eklenecektir!')">Ödemeyi Tamamla</button>
-        {% endif %}
     </div>
+
+    <div id="emptyState" class="empty-msg" style="display: none;">
+        <h2>Sepetiniz Şu An Boş Kanka!</h2>
+        <p>Görünüşe göre henüz bir ürün eklememişsin.</p>
+        <a href="/" style="color: #66c0f4; text-decoration: none; font-weight: bold;">Hemen Ürünlere Göz At →</a>
+    </div>
+</div>
+
+<script>
+    function loadCheckout() {
+        // localStorage'dan sepeti alıyoruz
+        const cart = JSON.parse(localStorage.getItem('rexCart')) || [];
+        const cartList = document.getElementById('cartList');
+        const totalPriceEl = document.getElementById('totalPrice');
+        const content = document.getElementById('checkoutContent');
+        const empty = document.getElementById('emptyState');
+
+        if (cart.length === 0) {
+            content.style.display = 'none';
+            empty.style.display = 'block';
+            return;
+        }
+
+        let total = 0;
+        cartList.innerHTML = cart.map(item => {
+            total += item.price;
+            return `
+                <div class="cart-item">
+                    <img src="${item.img}" alt="${item.name}">
+                    <div class="cart-item-info">
+                        <div class="cart-item-name">${item.name}</div>
+                        <div class="cart-item-price">${item.price.toLocaleString('tr-TR')} TL</div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+
+        totalPriceEl.textContent = total.toLocaleString('tr-TR') + ' TL';
+    }
+
+    function completeOrder() {
+        alert('Siparişiniz Alındı Kanka! En kısa sürede teslimat yapılacaktır.');
+        localStorage.removeItem('rexCart'); // Sipariş bitince sepeti temizle
+        window.location.href = '/';
+    }
+
+    // Sayfa yüklendiğinde sepeti doldur
+    loadCheckout();
+</script>
+
 </body>
 </html>
