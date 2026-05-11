@@ -6,76 +6,90 @@
     <title>Ödeme Yap — RexGlobal</title>
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0f1114; color: #c6d4df; padding: 40px; margin: 0; }
-        .checkout-container { max-width: 900px; margin: 0 auto; display: grid; grid-template-columns: 1fr 350px; gap: 30px; }
-        h1 { color: white; grid-column: span 2; margin-bottom: 20px; }
+        .checkout-container { max-width: 1000px; margin: 0 auto; display: grid; grid-template-columns: 1fr 380px; gap: 30px; }
+        h1 { color: white; grid-column: span 2; margin-bottom: 10px; font-size: 24px; }
         
-        .checkout-box { background: #171a21; padding: 25px; border-radius: 8px; border: 1px solid #2a2d35; }
-        .order-summary { background: #1b2838; padding: 20px; border-radius: 8px; border: 1px solid #2a3a50; height: fit-content; }
+        .checkout-box { background: #171a21; padding: 25px; border-radius: 4px; border: 1px solid #2a2d35; }
+        .order-summary { background: #1b2838; padding: 20px; border-radius: 4px; border: 1px solid #2a3a50; height: fit-content; position: sticky; top: 20px; }
         
-        .cart-item { display: flex; align-items: center; gap: 15px; padding: 15px 0; border-bottom: 1px solid #2a2d35; }
-        .cart-item img { width: 60px; height: 60px; object-fit: contain; background: #1e2329; border-radius: 4px; }
+        .cart-item { display: flex; align-items: center; gap: 15px; padding: 12px 0; border-bottom: 1px solid #2a2d35; }
+        .cart-item img { width: 50px; height: 50px; object-fit: contain; background: #000; border-radius: 4px; border: 1px solid #2a3a50; }
         .cart-item-info { flex: 1; }
-        .cart-item-name { font-weight: 600; color: white; font-size: 14px; }
-        .cart-item-price { color: #a4d007; font-size: 13px; margin-top: 4px; }
+        .cart-item-name { font-weight: 600; color: white; font-size: 13px; }
+        .cart-item-price { color: #a4d007; font-size: 12px; margin-top: 2px; }
         
-        .total-row { display: flex; justify-content: space-between; margin-top: 20px; font-size: 18px; font-weight: bold; color: white; }
+        .total-row { display: flex; justify-content: space-between; margin-top: 20px; font-size: 20px; font-weight: bold; color: white; border-top: 1px solid #2a3a50; padding-top: 15px; }
         
-        input, select { width: 100%; background: #1e2329; border: 1px solid #2a2d35; color: white; padding: 12px; border-radius: 4px; margin-bottom: 15px; outline: none; }
-        button { width: 100%; padding: 15px; background: #a4d007; color: #1a1a1a; border: none; cursor: pointer; font-weight: bold; border-radius: 4px; font-size: 16px; margin-top: 10px; }
-        button:hover { background: #b8e60a; }
+        label { display: block; font-size: 12px; color: #8f98a0; margin-bottom: 5px; text-transform: uppercase; font-weight: bold; }
+        input, select { width: 100%; background: #1e2329; border: 1px solid #2a2d35; color: white; padding: 12px; border-radius: 4px; margin-bottom: 15px; outline: none; transition: border-color 0.2s; }
+        input:focus { border-color: #66c0f4; }
+
+        button { width: 100%; padding: 15px; background: #a4d007; color: #1a1a1a; border: none; cursor: pointer; font-weight: bold; border-radius: 4px; font-size: 16px; margin-top: 10px; transition: transform 0.1s, background 0.2s; }
+        button:hover { background: #b8e60a; transform: translateY(-1px); }
+        button:active { transform: translateY(0); }
         
-        .empty-msg { text-align: center; padding: 50px; color: #8f98a0; grid-column: span 2; }
-        .back-link { color: #66c0f4; text-decoration: none; display: inline-block; margin-bottom: 20px; }
+        .empty-msg { text-align: center; padding: 100px 20px; color: #8f98a0; grid-column: span 2; }
+        .back-link { color: #66c0f4; text-decoration: none; display: inline-block; margin-bottom: 10px; font-size: 14px; grid-column: span 2; }
+        .back-link:hover { text-decoration: underline; }
     </style>
 </head>
 <body>
 
 <div class="checkout-container">
-    <a href="/" class="back-link">← Alışverişe Devam Et</a>
+    <a href="/" class="back-link">← Mağazaya Dön</a>
     <h1>Güvenli Ödeme Sayfası</h1>
 
     <div id="checkoutContent" style="display: contents;">
         <div class="checkout-box">
-            <h3 style="color:white; margin-top:0;">Teslimat Bilgileri</h3>
-            <input type="text" placeholder="Adınız Soyadınız" required>
-            <input type="email" placeholder="E-Posta Adresiniz" required>
-            <input type="text" placeholder="Steam Takas Linkiniz (Trade URL)" required>
+            <h3 style="color:white; margin-top:0; margin-bottom: 20px; border-bottom: 1px solid #2a2d35; padding-bottom: 10px;">Teslimat & Ödeme Bilgileri</h3>
             
-            <h3 style="color:white; margin-top:20px;">Ödeme Yöntemi</h3>
-            <select>
-                <option>Kredi / Banka Kartı</option>
-                <option>Papara / IBAN</option>
-                <option>Kripto Para</option>
+            <label>Alıcı Bilgileri</label>
+            <input type="text" id="fullName" placeholder="Adınız Soyadınız" required>
+            <input type="email" id="email" placeholder="E-Posta Adresiniz" required>
+            <input type="text" id="tradeUrl" placeholder="Steam Takas Linkiniz (Trade URL)" required>
+            
+            <label>Ödeme Yöntemi</label>
+            <select id="payMethod">
+                <option value="kart">Kredi / Banka Kartı</option>
+                <option value="havale">Papara / IBAN / Havale</option>
+                <option value="kripto">Kripto Para (BTC/LTC/USDT)</option>
             </select>
-            <input type="text" placeholder="Kart Numarası">
-            <div style="display:flex; gap:10px;">
-                <input type="text" placeholder="AA/YY">
-                <input type="text" placeholder="CVV">
+
+            <div id="cardSection">
+                <label>Kart Bilgileri</label>
+                <input type="text" placeholder="**** **** **** ****">
+                <div style="display:flex; gap:10px;">
+                    <input type="text" placeholder="AA/YY">
+                    <input type="text" placeholder="CVV">
+                </div>
             </div>
-            <button onclick="completeOrder()">Siparişi Onayla Ve Öde</button>
+
+            <button onclick="completeOrder()">SİPARİŞİ TAMAMLA</button>
+            <p style="font-size: 11px; color: #555; text-align: center; margin-top: 10px;">Ödemeniz 256-bit SSL ile korunmaktadır.</p>
         </div>
 
         <div class="order-summary">
-            <h3 style="color:white; margin-top:0;">Sipariş Özeti</h3>
+            <h3 style="color:white; margin-top:0; font-size: 16px;">Sipariş Özeti</h3>
             <div id="cartList">
                 </div>
             <div class="total-row">
                 <span>Toplam:</span>
-                <span id="totalPrice" style="color: #a4d007;">0.00 TL</span>
+                <span id="totalPrice">0.00 TL</span>
             </div>
         </div>
     </div>
 
     <div id="emptyState" class="empty-msg" style="display: none;">
-        <h2>Sepetiniz Şu An Boş Kanka!</h2>
+        <div style="font-size: 50px; margin-bottom: 20px;">🛒</div>
+        <h2>Sepetin Boş Kanka!</h2>
         <p>Görünüşe göre henüz bir ürün eklememişsin.</p>
-        <a href="/" style="color: #66c0f4; text-decoration: none; font-weight: bold;">Hemen Ürünlere Göz At →</a>
+        <br>
+        <a href="/" style="background: #66c0f4; color: white; padding: 10px 25px; text-decoration: none; border-radius: 4px; font-weight: bold;">Ürünlere Göz At</a>
     </div>
 </div>
 
 <script>
     function loadCheckout() {
-        // localStorage'dan sepeti alıyoruz
         const cart = JSON.parse(localStorage.getItem('rexCart')) || [];
         const cartList = document.getElementById('cartList');
         const totalPriceEl = document.getElementById('totalPrice');
@@ -90,10 +104,10 @@
 
         let total = 0;
         cartList.innerHTML = cart.map(item => {
-            total += item.price;
+            total += parseFloat(item.price);
             return `
                 <div class="cart-item">
-                    <img src="${item.img}" alt="${item.name}">
+                    <img src="${item.img}" onerror="this.src='/static/uploads/no-image.png'">
                     <div class="cart-item-info">
                         <div class="cart-item-name">${item.name}</div>
                         <div class="cart-item-price">${item.price.toLocaleString('tr-TR')} TL</div>
@@ -102,16 +116,22 @@
             `;
         }).join('');
 
-        totalPriceEl.textContent = total.toLocaleString('tr-TR') + ' TL';
+        totalPriceEl.textContent = total.toLocaleString('tr-TR', { minimumFractionDigits: 2 }) + ' TL';
     }
 
     function completeOrder() {
-        alert('Siparişiniz Alındı Kanka! En kısa sürede teslimat yapılacaktır.');
-        localStorage.removeItem('rexCart'); // Sipariş bitince sepeti temizle
+        const name = document.getElementById('fullName').value;
+        if(!name) {
+            alert("Lütfen adınızı yaz kanka!");
+            return;
+        }
+
+        alert('Siparişiniz Alındı Kanka! Ödeme onayından sonra teslimat süreci başlayacaktır.');
+        localStorage.removeItem('rexCart'); 
         window.location.href = '/';
     }
 
-    // Sayfa yüklendiğinde sepeti doldur
+    // Sayfa yüklendiğinde çalıştır
     loadCheckout();
 </script>
 
