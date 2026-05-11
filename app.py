@@ -11,13 +11,11 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 # --- ADMİN AYARLARI ---
 ADMIN_USER = "Administrator" 
-ADMIN_PASS = "Admin123" # Burayı Kendine Göre Değiştirmeyi Unutma Kanka!
+ADMIN_PASS = "AdminRexGlobal" 
 # ----------------------
 
-# Veritabanı Yolu Render İçin Tam Yol Olarak Belirtildi
 DB_PATH = os.path.join(os.path.dirname(__file__), 'database.db')
 
-# Veritabanı Bağlantı Yardımcısı
 def db_query(query, params=(), one=False, commit=False):
     conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
@@ -32,33 +30,36 @@ def db_query(query, params=(), one=False, commit=False):
         conn.close()
     return res
 
-# Tabloları Hazırla
 def init_db():
     if not os.path.exists(UPLOAD_FOLDER): 
         os.makedirs(UPLOAD_FOLDER, exist_ok=True)
     
+    # Kullanıcılar Tablosu
     db_query('''CREATE TABLE IF NOT EXISTS users (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         email TEXT UNIQUE,
         password TEXT,
         role TEXT DEFAULT 'user')''', commit=True)
         
+    # Ürünler Tablosu
     db_query('''CREATE TABLE IF NOT EXISTS products (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         name TEXT,
         category TEXT,
         price REAL,
-        discount_price REAL,
-        discount_end DATETIME,
         img TEXT)''', commit=True)
+
+    # KATEGORİLER TABLOSU (YENİ)
+    db_query('''CREATE TABLE IF NOT EXISTS categories (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT UNIQUE)''', commit=True)
     
-    # Administrator Hesabını Otomatik Oluştur
+    # Admin Hesabı Kontrolü
     admin_check = db_query("SELECT * FROM users WHERE email = ?", (ADMIN_USER,), one=True)
     if not admin_check:
         db_query("INSERT INTO users (email, password, role) VALUES (?, ?, ?)", 
                  (ADMIN_USER, ADMIN_PASS, "administrator"), commit=True)
 
-# Uygulama Başlatıldığında Veritabanını Kur
 with app.app_context():
     init_db()
 
@@ -106,11 +107,8 @@ def register():
     if request.method == 'POST':
         email = request.form.get('email')
         password = request.form.get('password')
-        
-        # Admin İsmi Haricinde @ İşareti Zorunluluğu Kontrolü
         if email != ADMIN_USER and "@" not in email:
             return "Hata: Geçerli Bir E-Posta Adresi Girmeniz Gerekmektedir!", 400
-            
         try:
             db_query("INSERT INTO users (email, password, role) VALUES (?, ?, ?)", 
                      (email, password, 'user'), commit=True)
@@ -124,14 +122,32 @@ def logout():
     session.clear()
     return redirect(url_for('index'))
 
-# --- ADMİN PANELİ ---
+# --- ADMİN PANELİ VE KATEGORİ YÖNETİMİ ---
 @app.route('/admin')
 def admin_panel():
     if session.get('role') != 'administrator':
         return "Yetkisiz Erişim!", 403
     products = db_query("SELECT * FROM products")
     users = db_query("SELECT * FROM users")
-    return render_template('admin.html', products=products, users=users)
+    categories = db_query("SELECT * FROM categories") # Kategorileri çek
+    return render_template('admin.html', products=products, users=users, categories=categories)
+
+@app.route('/admin/add_category', methods=['POST'])
+def add_category():
+    if session.get('role') != 'administrator': return "Yetkisiz!", 403
+    cat_name = request.form.get('category_name')
+    if cat_name:
+        try:
+            db_query("INSERT INTO categories (name) VALUES (?)", (cat_name,), commit=True)
+        except:
+            pass
+    return redirect(url_for('admin_panel'))
+
+@app.route('/admin/delete_category/<int:id>')
+def delete_category(id):
+    if session.get('role') != 'administrator': return "Yetkisiz!", 403
+    db_query("DELETE FROM categories WHERE id = ?", (id,), commit=True)
+    return redirect(url_for('admin_panel'))
 
 @app.route('/admin/add_product', methods=['POST'])
 def add_product():
@@ -150,15 +166,16 @@ def add_product():
              (name, cat, price, img_path), commit=True)
     return redirect(url_for('admin_panel'))
 
+# --- ANA SAYFA ---
+@app.route('/')
+def index():
+    categories = db_query("SELECT * FROM categories") # Kategorileri menü için çek
+    return render_template('index.html', categories=categories)
+
 # --- CHECKOUT ---
 @app.route('/checkout')
 def checkout():
     return render_template('checkout.html', items=[], total=0)
-
-# --- ANA SAYFA ---
-@app.route('/')
-def index():
-    return render_template('index.html')
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
