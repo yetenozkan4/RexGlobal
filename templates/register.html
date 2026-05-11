@@ -4,10 +4,15 @@
     <meta charset="UTF-8">
     <title>Kayıt Ol — RexGlobal</title>
     <style>
-        body { background: #0f1114; color: white; font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-        .login-box { background: #171a21; padding: 2.5rem; border-radius: 8px; border: 1px solid #2a2d35; width: 100%; max-width: 400px; }
-        input { width: 100%; padding: 12px; margin-bottom: 1.5rem; background: #1e2329; border: 1px solid #2a2d35; color: white; border-radius: 4px; outline: none; }
-        button { width: 100%; padding: 12px; background: #4c6b22; color: #a4d007; border: none; cursor: pointer; font-weight: bold; border-radius: 4px; }
+        body { background: #0f1114; color: white; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .login-box { background: #171a21; padding: 2.5rem; border-radius: 8px; border: 1px solid #2a2d35; width: 100%; max-width: 400px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
+        .login-box h2 { margin-bottom: 1.5rem; font-size: 24px; color: #fff; text-align: center; }
+        .login-box h2 span { color: #66c0f4; }
+        label { display: block; font-size: 13px; color: #8f98a0; margin-bottom: 5px; }
+        input { width: 100%; padding: 12px; margin-bottom: 1.5rem; background: #1e2329; border: 1px solid #2a2d35; color: white; border-radius: 4px; outline: none; transition: border-color 0.2s; }
+        input:focus { border-color: #66c0f4; }
+        button { width: 100%; padding: 12px; background: #4c6b22; color: #a4d007; border: none; cursor: pointer; font-weight: bold; font-size: 16px; border-radius: 4px; transition: background 0.2s; }
+        button:hover { background: #5a7a28; }
         .footer-links { margin-top: 1.5rem; text-align: center; font-size: 13px; color: #8f98a0; }
         .footer-links a { color: #66c0f4; text-decoration: none; }
     </style>
@@ -15,11 +20,14 @@
 <body>
     <div class="login-box">
         <form method="POST" action="/register">
-            <h2 style="text-align:center;">Rex<span>Global</span> Kayıt Ol</h2>
-            <label style="display:block; margin-bottom:5px; font-size:13px; color:#8f98a0;">E-Posta Adresi</label>
-            <input type="email" name="email" placeholder="E-Posta Adresinizi Giriniz" required>
-            <label style="display:block; margin-bottom:5px; font-size:13px; color:#8f98a0;">Şifre</label>
-            <input type="password" name="password" placeholder="Şifrenizi Belirleyiniz" required>
+            <h2>Rex<span>Global</span> Kayıt Ol</h2>
+            
+            <label>E-Posta Adresi</label>
+            <input type="text" name="email" placeholder="E-Posta Adresinizi Giriniz" required>
+            
+            <label>Şifre</label>
+            <input type="password" name="password" placeholder="Güçlü Bir Şifre Belirleyiniz" required>
+            
             <button type="submit">Kayıt Ol Ve Hesabı Oluştur</button>
         </form>
         <div class="footer-links">
