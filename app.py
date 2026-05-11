@@ -9,11 +9,12 @@ app.secret_key = "rexglobal_secret_key"
 UPLOAD_FOLDER = 'static/uploads'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
+# Veritabanı yolu Render için tam yol olarak belirtildi
+DB_PATH = os.path.join(os.path.dirname(__file__), 'database.db')
+
 # Veritabanı Bağlantı Yardımcısı
 def db_query(query, params=(), one=False, commit=False):
-    # Veritabanı yolu Render için tam yol olarak belirtildi
-    db_path = os.path.join(os.path.dirname(__file__), 'database.db')
-    conn = sqlite3.connect(db_path)
+    conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
     try:
         cur = conn.execute(query, params)
@@ -26,14 +27,17 @@ def db_query(query, params=(), one=False, commit=False):
         conn.close()
     return res
 
-# Tabloları Hazırla
+# Tabloları Hazırla (Artık her uygulama başladığında otomatik kontrol edecek)
 def init_db():
-    if not os.path.exists(UPLOAD_FOLDER): os.makedirs(UPLOAD_FOLDER)
+    if not os.path.exists(UPLOAD_FOLDER): 
+        os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+    
     db_query('''CREATE TABLE IF NOT EXISTS users (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         email TEXT UNIQUE,
         password TEXT,
         role TEXT DEFAULT 'user')''', commit=True)
+        
     db_query('''CREATE TABLE IF NOT EXISTS products (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         name TEXT,
@@ -42,8 +46,18 @@ def init_db():
         discount_price REAL,
         discount_end DATETIME,
         img TEXT)''', commit=True)
+    
+    # İlk Admin Hesabını Otomatik Oluştur (Eğer yoksa)
+    admin_check = db_query("SELECT * FROM users WHERE email = ?", ("admin@rexglobal.com",), one=True)
+    if not admin_check:
+        db_query("INSERT INTO users (email, password, role) VALUES (?, ?, ?)", 
+                 ("admin@rexglobal.com", "admin123", "administrator"), commit=True)
 
-# --- API (JS İÇİN GEREKLİ) ---
+# UYGULAMA BAŞLATILDIĞINDA DB'Yİ KUR
+with app.app_context():
+    init_db()
+
+# --- API ---
 @app.route('/api/items')
 def get_items():
     category = request.args.get('category', 'all')
@@ -77,10 +91,9 @@ def login():
             session['user_id'] = user['id']
             session['email'] = user['email']
             session['role'] = user['role']
-            if email == "admin@rexglobal.com" and password == "admin123":
-                db_query("UPDATE users SET role = 'administrator' WHERE email = ?", (email,), commit=True)
-                session['role'] = 'administrator'
             return redirect(url_for('index'))
+        else:
+            return "Giriş Başarısız! Email veya Şifre hatalı.", 401
     return render_template('login.html')
 
 @app.route('/logout')
@@ -99,11 +112,12 @@ def admin_panel():
 
 @app.route('/admin/add_product', methods=['POST'])
 def add_product():
+    if session.get('role') != 'administrator': return "Yetkisiz!", 403
     name = request.form.get('name')
     cat = request.form.get('category')
     price = request.form.get('price')
     file = request.files.get('img')
-    img_path = ""
+    img_path = "/static/uploads/no-image.png"
     if file:
         filename = secure_filename(file.filename)
         file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
@@ -113,14 +127,17 @@ def add_product():
              (name, cat, price, img_path), commit=True)
     return redirect(url_for('admin_panel'))
 
+# --- CHECKOUT (Log hatasını çözen rota) ---
+@app.route('/checkout')
+def checkout():
+    # Şimdilik sepet boş gibi davranır veya login zorunluluğu koyabilirsin
+    return render_template('checkout.html', items=[], total=0)
+
 # --- ANA SAYFA ---
 @app.route('/')
 def index():
-    products = db_query("SELECT * FROM products")
-    return render_template('index.html', products=products)
+    return render_template('index.html')
 
-# --- RENDER UYUMLU ÇALIŞTIRICI ---
 if __name__ == "__main__":
-    init_db()
     port = int(os.environ.get("PORT", 5000))
     app.run(host='0.0.0.0', port=port)
