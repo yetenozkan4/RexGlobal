@@ -128,8 +128,9 @@ def checkout():
 
 @app.route('/')
 def index():
+    # Session verilerini çekip HTML'e gönderiyoruz
     products = db_query("SELECT * FROM products")
-    return render_template('index.html', products=products)
+    return render_template('index.html', products=products, session=session)
 
 if __name__ == "__main__":
     init_db()
