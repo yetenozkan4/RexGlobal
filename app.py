@@ -9,6 +9,11 @@ app.secret_key = "rexglobal_secret_key"
 UPLOAD_FOLDER = 'static/uploads'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
+# --- ADMİN AYARLARI ---
+ADMIN_USER = "Administrator" 
+ADMIN_PASS = "AdministratorRexGlobal" # Burayı Kendine Göre Değiştirmeyi Unutma Kanka!
+# ----------------------
+
 # Veritabanı Yolu Render İçin Tam Yol Olarak Belirtildi
 DB_PATH = os.path.join(os.path.dirname(__file__), 'database.db')
 
@@ -47,11 +52,11 @@ def init_db():
         discount_end DATETIME,
         img TEXT)''', commit=True)
     
-    # İlk Admin Hesabını Otomatik Oluştur
-    admin_check = db_query("SELECT * FROM users WHERE email = ?", ("admin@rexglobal.com",), one=True)
+    # Administrator Hesabını Otomatik Oluştur
+    admin_check = db_query("SELECT * FROM users WHERE email = ?", (ADMIN_USER,), one=True)
     if not admin_check:
         db_query("INSERT INTO users (email, password, role) VALUES (?, ?, ?)", 
-                 ("admin@rexglobal.com", "admin123", "administrator"), commit=True)
+                 (ADMIN_USER, ADMIN_PASS, "administrator"), commit=True)
 
 # Uygulama Başlatıldığında Veritabanını Kur
 with app.app_context():
@@ -93,7 +98,7 @@ def login():
             session['role'] = user['role']
             return redirect(url_for('index'))
         else:
-            return "Giriş Başarısız! E-Posta Veya Şifre Hatalı.", 401
+            return "Giriş Başarısız! Kullanıcı Adı Veya Şifre Hatalı.", 401
     return render_template('login.html')
 
 @app.route('/register', methods=['GET', 'POST'])
@@ -101,12 +106,17 @@ def register():
     if request.method == 'POST':
         email = request.form.get('email')
         password = request.form.get('password')
+        
+        # Admin İsmi Haricinde @ İşareti Zorunluluğu Kontrolü
+        if email != ADMIN_USER and "@" not in email:
+            return "Hata: Geçerli Bir E-Posta Adresi Girmeniz Gerekmektedir!", 400
+            
         try:
             db_query("INSERT INTO users (email, password, role) VALUES (?, ?, ?)", 
                      (email, password, 'user'), commit=True)
             return redirect(url_for('login'))
         except:
-            return "Bu E-Posta Adresi Zaten Kayıtlı!", 400
+            return "Bu Kullanıcı Adı Veya E-Posta Zaten Kayıtlı!", 400
     return render_template('register.html')
 
 @app.route('/logout')
@@ -136,7 +146,7 @@ def add_product():
         file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
         img_path = f"/static/uploads/{filename}"
     
-    db_query("INSERT INTO products (name, category, price, img) VALUES (?, ?, ?, ?)", 
+    db_query("INSERT INTO products (name, category, price, img) VALUES (?, ?, ? , ?)", 
              (name, cat, price, img_path), commit=True)
     return redirect(url_for('admin_panel'))
 
