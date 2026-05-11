@@ -1,86 +1,29 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Admin Paneli — RexGlobal</title>
-    <style>
-        body { background: #0f1114; color: #c6d4df; font-family: sans-serif; padding: 50px; }
-        .form-container { max-width: 500px; margin: 0 auto; background: #171a21; padding: 30px; border-radius: 8px; border: 1px solid #2a2d35; }
-        input, select { width: 100%; padding: 10px; margin: 10px 0; background: #1e2329; border: 1px solid #2a2d35; color: white; border-radius: 4px; }
-        button { width: 100%; padding: 12px; background: #4c6b22; color: #a4d007; border: none; font-weight: bold; cursor: pointer; border-radius: 4px; }
-        h2 { text-align: center; color: white; }
-    </style>
-</head>
-<body>
-    <div class="form-container">
-        <h2>Yeni Ürün Ekle</h2>
-        <form action="/admin/add" method="POST" enctype="multipart/form-data">
-            <input type="text" name="name" placeholder="Ürün Adı (Örn: AK-47 | Redline)" required>
-            <input type="number" step="0.01" name="price" placeholder="Fiyat ($)" required>
-            <select name="category">
-                <option value="RexGlobal">RexGlobal</option>
-            <select name="rarity">
-                <option value="Covert">Covert (Kırmızı)</option>
-                <option value="Classified">Classified (Pembe)</option>
-                <option value="Restricted">Restricted (Mor)</option>
-            </select>
-            <input type="number" step="0.0000000001" name="float" placeholder="Float Değeri (Örn: 0.15)">
-            <input type="file" name="item_img"> <button type="submit">Ürünü Mağazaya Ekle</button>
-        </form>
-        <hr style="border: 0; border-top: 1px solid #2a2d35; margin: 20px 0;">
-        <h2>Mevcut Ürünler ve Silme</h2>
-        <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
-            <thead>
-                <tr style="text-align: left; font-size: 13px; color: #8f98a0;">
-                    <th>Ürün</th>
-                    <th>Fiyat</th>
-                    <th style="text-align: right;">İşlem</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for item in items %}
-                <tr style="border-bottom: 1px solid #1e2329;">
-                    <td style="padding: 10px 0;">{{ item.name }}</td>
-                    <td>${{ item.price }}</td>
-                    <td style="text-align: right;">
-                        <form action="/admin/delete/{{ item.id }}" method="POST" style="display:inline;">
-                            <button type="submit" style="background:#eb4b4b; color:white; border:none; padding:5px 10px; border-radius:3px; cursor:pointer;">Sil</button>
-                        </form>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+<h2>Ürün Yönetimi</h2>
+<form action="/admin/add_product" method="POST" enctype="multipart/form-data">
+    <input type="text" name="name" placeholder="Ürün Adı" required>
+    <input type="text" name="category" placeholder="Kategori">
+    <input type="number" name="price" placeholder="Fiyat">
+    <input type="file" name="img">
+    <button type="submit">Ekle</button>
+</form>
 
-        <h2 style="margin-top: 30px;">Kullanıcı Yönetimi</h2>
-        <ul style="list-style: none; padding: 0;">
-            {% for user in users %}
-            <li style="background: #1e2329; padding: 10px; border-radius: 4px; margin-bottom: 5px; display: flex; justify-content: space-between; align-items: center;">
-                <span>{{ user.username }} ({{ user.role }})</span>
-                <form action="/admin/update_role/{{ user.id }}" method="POST" style="display:flex; gap: 5px;">
-                    <select name="role" style="width: auto; margin: 0; padding: 2px; background:#0f1114; color:white;">
-                        <option value="user" {% if user.role == 'user' %}selected{% endif %}>User</option>
-                        <option value="admin" {% if user.role == 'admin' %}selected{% endif %}>Admin</option>
-                    </select>
-                    <button type="submit" style="background:#66c0f4; color:white; border:none; padding:2px 8px; border-radius:3px; cursor:pointer;">Güncelle</button>
-                </form>
-            </li>
-            {% endfor %}
-        </ul>
-        ```
+<table>
+    {% for p in products %}
+    <tr>
+        <td>{{ p.name }}</td>
+        <td>{{ p.price }} TL</td>
+        <td>
+            <form action="/admin/set_discount/{{ p.id }}" method="POST">
+                <input type="number" name="discount_price" placeholder="İndirimli Fiyat">
+                <input type="datetime-local" name="discount_end">
+                <button type="submit">İndirim Tanımla</button>
+            </form>
+        </td>
+    </tr>
+    {% endfor %}
+</table>
 
-### Kodun Görünümü Şöyle Olmalı:
-1.  `...` (Üstteki form kodların)
-2.  `</form>` **(Bu senin 30. veya 31. satırın)**
-3.  **[Yukarıda verdiğim yeni kodlar]**
-4.  `</div>`
-5.  `</body>`
-6.  `</html>`
-
-Bu şekilde yaparsan hem ürün ekleme formun üstte kalır, hem de onun hemen altında tüm ürünlerin listesi ve "Sil" butonu görünür. Sitenin yönetim paneli tam bir profesyonel sisteme dönüşür. 
-
-Hadi yapıştır ve Render'a gönder, sonucun efsane olacağına eminim!
-        <br>
-        <a href="/" style="color: #66c0f4; text-decoration: none; display: block; text-align: center;">← Mağazaya Dön</a>
-    </div>
-</body>
-</html>
+<h2>Kullanıcı Rolleri</h2>
+{% for u in users %}
+    <p>{{ u.email }} - Rol: {{ u.role }}</p>
+{% endfor %}
