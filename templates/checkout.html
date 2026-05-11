@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <title>Ödeme Yap — RexGlobal</title>
+    <style>
+        body { font-family: sans-serif; background: #0f1114; color: #c6d4df; padding: 50px; }
+        .checkout-container { max-width: 800px; margin: 0 auto; background: #171a21; padding: 30px; border-radius: 8px; border: 1px solid #2a2d35; }
+        h1 { color: white; border-bottom: 1px solid #2a2d35; padding-bottom: 15px; }
+        .item-row { display: flex; justify-content: space-between; padding: 15px 0; border-bottom: 1px solid #1e2329; }
+        .total-box { margin-top: 20px; text-align: right; font-size: 20px; color: #a4d007; font-weight: bold; }
+        .pay-button { display: block; width: 100%; padding: 15px; background: #4c6b22; color: #a4d007; border: none; font-size: 18px; font-weight: bold; cursor: pointer; border-radius: 4px; margin-top: 30px; text-decoration: none; text-align: center; }
+        .pay-button:hover { background: #5a7a28; }
+        .back-link { color: #66c0f4; text-decoration: none; font-size: 14px; display: inline-block; margin-bottom: 20px; }
+    </style>
+</head>
+<body>
+    <div class="checkout-container">
+        <a href="/" class="back-link">← Alışverişe Devam Et</a>
+        <h1>Sipariş Özeti</h1>
+        
+        <div class="items-list">
+            {% if items %}
+                {% for item in items %}
+                <div class="item-row">
+                    <span>{{ item.name }}</span>
+                    <span>${{ "%.2f"|format(item.discount_price if item.discount_price else item.price) }}</span>
+                </div>
+                {% endfor %}
+            {% else %}
+                <p style="padding: 20px 0;">Sepetiniz şu an boş.</p>
+            {% endif %}
+        </div>
+
+        <div class="total-box">
+            Toplam Tutar: ${{ "%.2f"|format(total) }}
+        </div>
+
+        {% if items %}
+            <button class="pay-button" onclick="alert('Ödeme sistemi yakında eklenecektir!')">Ödemeyi Tamamla</button>
+        {% endif %}
+    </div>
+</body>
+</html>
