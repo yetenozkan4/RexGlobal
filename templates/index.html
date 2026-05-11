@@ -89,12 +89,12 @@
 <div class="main">
   <aside class="sidebar">
     <div class="sidebar-section">
-      <div class="sidebar-title">Kategori</div>
+      <div class="sidebar-title">Kategoriler</div>
       <ul class="filter-list" id="categoryList">
         <li class="filter-item active" data-value="all">Tümü</li>
-        <li class="filter-item" data-value="Tüfekler">Tüfekler</li>
-        <li class="filter-item" data-value="Bıçaklar">Bıçaklar</li>
-        <li class="filter-item" data-value="Eldivenler">Eldivenler</li>
+        {% for cat in categories %}
+          <li class="filter-item" data-value="{{ cat.name }}">{{ cat.name }}</li>
+        {% endfor %}
       </ul>
     </div>
   </aside>
