@@ -9,7 +9,7 @@ app.secret_key = "rexglobal_secret_key"
 UPLOAD_FOLDER = 'static/uploads'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
-# Veritabanı yolu Render için tam yol olarak belirtildi
+# Veritabanı Yolu Render İçin Tam Yol Olarak Belirtildi
 DB_PATH = os.path.join(os.path.dirname(__file__), 'database.db')
 
 # Veritabanı Bağlantı Yardımcısı
@@ -27,7 +27,7 @@ def db_query(query, params=(), one=False, commit=False):
         conn.close()
     return res
 
-# Tabloları Hazırla (Artık her uygulama başladığında otomatik kontrol edecek)
+# Tabloları Hazırla
 def init_db():
     if not os.path.exists(UPLOAD_FOLDER): 
         os.makedirs(UPLOAD_FOLDER, exist_ok=True)
@@ -47,13 +47,13 @@ def init_db():
         discount_end DATETIME,
         img TEXT)''', commit=True)
     
-    # İlk Admin Hesabını Otomatik Oluştur (Eğer yoksa)
+    # İlk Admin Hesabını Otomatik Oluştur
     admin_check = db_query("SELECT * FROM users WHERE email = ?", ("admin@rexglobal.com",), one=True)
     if not admin_check:
         db_query("INSERT INTO users (email, password, role) VALUES (?, ?, ?)", 
                  ("admin@rexglobal.com", "admin123", "administrator"), commit=True)
 
-# UYGULAMA BAŞLATILDIĞINDA DB'Yİ KUR
+# Uygulama Başlatıldığında Veritabanını Kur
 with app.app_context():
     init_db()
 
@@ -93,8 +93,21 @@ def login():
             session['role'] = user['role']
             return redirect(url_for('index'))
         else:
-            return "Giriş Başarısız! Email veya Şifre hatalı.", 401
+            return "Giriş Başarısız! E-Posta Veya Şifre Hatalı.", 401
     return render_template('login.html')
+
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    if request.method == 'POST':
+        email = request.form.get('email')
+        password = request.form.get('password')
+        try:
+            db_query("INSERT INTO users (email, password, role) VALUES (?, ?, ?)", 
+                     (email, password, 'user'), commit=True)
+            return redirect(url_for('login'))
+        except:
+            return "Bu E-Posta Adresi Zaten Kayıtlı!", 400
+    return render_template('register.html')
 
 @app.route('/logout')
 def logout():
@@ -127,10 +140,9 @@ def add_product():
              (name, cat, price, img_path), commit=True)
     return redirect(url_for('admin_panel'))
 
-# --- CHECKOUT (Log hatasını çözen rota) ---
+# --- CHECKOUT ---
 @app.route('/checkout')
 def checkout():
-    # Şimdilik sepet boş gibi davranır veya login zorunluluğu koyabilirsin
     return render_template('checkout.html', items=[], total=0)
 
 # --- ANA SAYFA ---
