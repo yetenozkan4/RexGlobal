@@ -11,7 +11,7 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 # --- ADMİN AYARLARI ---
 ADMIN_USER = "Administrator" 
-ADMIN_PASS = "AdminRexGlobal" # Burayı Kendine Göre Değiştirmeyi Unutma Kanka!
+ADMIN_PASS = "Admin123" # Burayı Kendine Göre Değiştirmeyi Unutma Kanka!
 # ----------------------
 
 # Veritabanı Yolu Render İçin Tam Yol Olarak Belirtildi
