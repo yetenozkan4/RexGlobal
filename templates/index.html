@@ -3,9 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>RexGlobal — CS2 Item Mağazası</title>
+<title>RexGlobal — Item Mağazası</title>
 <style>
-  /* CSS Kısımları Aynı Kaldı */
+  /* Mevcut CSS'lerin hepsini korudum kanka */
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0f1114; color: #c6d4df; min-height: 100vh; }
   .topbar { background: #171a21; border-bottom: 1px solid #2a2d35; padding: 0 2rem; height: 52px; display: flex; align-items: center; gap: 2rem; }
@@ -16,11 +16,8 @@
   .topbar-link:hover { color: #c6d4df; }
   .topbar-link.active { color: #fff; border-bottom-color: #66c0f4; }
   .topbar-right { margin-left: auto; display: flex; align-items: center; gap: 12px; }
-  
-  /* ADMIN BUTONU STİLİ */
   .admin-special-link { color: #ffcc00 !important; font-weight: bold; border: 1px solid #ffcc00; padding: 4px 10px; border-radius: 4px; margin-left: 10px; transition: all 0.2s; }
   .admin-special-link:hover { background: #ffcc00; color: #171a21 !important; }
-
   .cart-button { background: #4c6b22; color: #a4d007; border: none; padding: 7px 16px; border-radius: 3px; font-size: 13px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: background .15s; }
   .cart-button:hover { background: #5a7a28; }
   .cart-badge { background: #a4d007; color: #1a1a1a; border-radius: 10px; padding: 1px 7px; font-size: 11px; font-weight: 700; }
@@ -51,6 +48,7 @@
   .overlay.open { opacity: 1; pointer-events: all; }
   .drawer { position: fixed; top: 0; right: 0; width: 360px; height: 100%; background: #171a21; border-left: 1px solid #2a2d35; z-index: 201; display: flex; flex-direction: column; transform: translateX(100%); transition: transform .2s; }
   .drawer.open { transform: translateX(0); }
+  .cart-item { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #2a2d35; font-size: 13px; }
 </style>
 </head>
 <body>
@@ -69,7 +67,7 @@
 
   <div class="topbar-right">
     {% if session.get('user_id') %}
-      <span style="font-size: 12px; color: #8f98a0;">{{ session.get('email') }}</span>
+      <span style="font-size: 12px; color: #8f98a0; margin-right: 10px;">{{ session.get('email') }}</span>
       <a href="/logout" style="color:#8f98a0; font-size:12px; text-decoration:none;">Çıkış</a>
     {% else %}
       <a href="/login" style="color:#8f98a0; font-size:12px; text-decoration:none;">Giriş Yap</a>
@@ -96,6 +94,7 @@
         <li class="filter-item active" data-value="all">Tümü</li>
         <li class="filter-item" data-value="Tüfekler">Tüfekler</li>
         <li class="filter-item" data-value="Bıçaklar">Bıçaklar</li>
+        <li class="filter-item" data-value="Eldivenler">Eldivenler</li>
       </ul>
     </div>
   </aside>
@@ -107,22 +106,23 @@
       </div>
       <span class="results-count" id="resultsCount">0 ürün</span>
     </div>
-    <div class="items-grid" id="itemsGrid">
-      </div>
+    <div class="items-grid" id="itemsGrid"></div>
   </div>
 </div>
 
 <div class="overlay" id="overlay"></div>
 <div class="drawer" id="drawer">
-    <div style="padding:20px; color:white;">
+    <div style="padding:20px; color:white; display: flex; flex-direction: column; hieght: 100%;">
         <h3>Sepetim</h3>
-        <div id="drawerItems"></div>
-        <button onclick="closeCart()" style="margin-top:20px; width:100%; padding:10px; background:#4a5568; border:none; color:white; cursor:pointer;">Kapat</button>
+        <div id="drawerItems" style="flex: 1; overflow-y: auto; margin-top: 20px;"></div>
+        <div style="padding-top: 20px; border-top: 1px solid #2a2d35;">
+            <a href="/checkout" style="display: block; width: 100%; padding: 12px; background: #a4d007; color: #1a1a1a; text-align: center; text-decoration: none; font-weight: bold; border-radius: 4px;">Ödemeye Geç</a>
+            <button onclick="closeCart()" style="margin-top:10px; width:100%; padding:10px; background:#4a5568; border:none; color:white; cursor:pointer;">Kapat</button>
+        </div>
     </div>
 </div>
 
 <script>
-// JavaScript kısmın aynı kalabilir, API üzerinden verileri çekmeye devam eder.
 let state = { category: 'all', q: '' };
 let cart = [];
 let allItems = [];
@@ -148,7 +148,7 @@ async function loadItems() {
             </div>
             <div class="card-body">
                 <div class="card-name">${item.name}</div>
-                <div class="price-current">$${item.price.toFixed(2)}</div>
+                <div class="price-current">${item.price.toLocaleString('tr-TR')} TL</div>
             </div>
         </div>
     `).join('');
@@ -158,12 +158,29 @@ function addToCart(id) {
     const item = allItems.find(i => i.id === id);
     if(item) {
         cart.push(item);
-        document.getElementById('cartCount').textContent = cart.length;
+        updateCartUI();
     }
 }
 
-function openCart() { document.getElementById('overlay').classList.add('open'); document.getElementById('drawer').classList.add('open'); }
-function closeCart() { document.getElementById('overlay').classList.remove('open'); document.getElementById('drawer').classList.remove('open'); }
+function updateCartUI() {
+    document.getElementById('cartCount').textContent = cart.length;
+    const drawerItems = document.getElementById('drawerItems');
+    drawerItems.innerHTML = cart.map(item => `
+        <div class="cart-item">
+            <span>${item.name}</span>
+            <span style="color: #a4d007;">${item.price.toLocaleString('tr-TR')} TL</span>
+        </div>
+    `).join('');
+}
+
+function openCart() { 
+    document.getElementById('overlay').classList.add('open'); 
+    document.getElementById('drawer').classList.add('open'); 
+}
+function closeCart() { 
+    document.getElementById('overlay').classList.remove('open'); 
+    document.getElementById('drawer').classList.remove('open'); 
+}
 
 document.getElementById('cartBtn').addEventListener('click', openCart);
 document.getElementById('categoryList').addEventListener('click', e => {
