@@ -11,7 +11,7 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 # --- ADMİN AYARLARI ---
 ADMIN_USER = "Administrator" 
-ADMIN_PASS = "admin123" # <--- Kanka şifreni buraya yazmayı unutma!
+ADMIN_PASS = "adminrex" 
 # ----------------------
 
 DB_PATH = os.path.join(os.path.dirname(__file__), 'database.db')
@@ -34,14 +34,12 @@ def init_db():
     if not os.path.exists(UPLOAD_FOLDER): 
         os.makedirs(UPLOAD_FOLDER, exist_ok=True)
     
-    # Kullanıcılar Tablosu
     db_query('''CREATE TABLE IF NOT EXISTS users (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         email TEXT UNIQUE,
         password TEXT,
         role TEXT DEFAULT 'user')''', commit=True)
         
-    # Ürünler Tablosu (Description alanı ile beraber)
     db_query('''CREATE TABLE IF NOT EXISTS products (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         name TEXT,
@@ -50,18 +48,15 @@ def init_db():
         img TEXT,
         description TEXT)''', commit=True)
 
-    # Tablo Güncelleme (Description yoksa ekle)
     try:
         db_query("ALTER TABLE products ADD COLUMN description TEXT", commit=True)
     except:
         pass
 
-    # Kategoriler Tablosu
     db_query('''CREATE TABLE IF NOT EXISTS categories (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         name TEXT UNIQUE)''', commit=True)
     
-    # Admin Kontrol ve Şifre Force Update
     admin_check = db_query("SELECT * FROM users WHERE email = ?", (ADMIN_USER,), one=True)
     if not admin_check:
         db_query("INSERT INTO users (email, password, role) VALUES (?, ?, ?)", 
@@ -96,7 +91,6 @@ def get_items():
             })
     return jsonify(items)
 
-# --- ÜRÜN DETAY SAYFASI (YENİ!) ---
 @app.route('/product/<int:id>')
 def product_detail(id):
     product = db_query("SELECT * FROM products WHERE id = ?", (id,), one=True)
@@ -104,7 +98,25 @@ def product_detail(id):
         return "Ürün Bulunamadı!", 404
     return render_template('product_detail.html', product=product)
 
-# --- AUTH ---
+# --- AUTH (KAYIT VE GİRİŞ) ---
+
+# YENİ EKLENEN KAYIT ROTASI BURASI KANKA!
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    if request.method == 'POST':
+        email = request.form.get('email')
+        password = request.form.get('password')
+        
+        user_check = db_query("SELECT * FROM users WHERE email = ?", (email,), one=True)
+        if user_check:
+            return "Bu email zaten kayıtlı kanka!", 400
+        
+        db_query("INSERT INTO users (email, password, role) VALUES (?, ?, ?)", 
+                 (email, password, "user"), commit=True)
+        
+        return redirect(url_for('login'))
+    return render_template('register.html')
+
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
