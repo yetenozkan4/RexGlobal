@@ -11,7 +11,7 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 # --- ADMİN AYARLARI ---
 ADMIN_USER = "Administrator" 
-ADMIN_PASS = "BURAYA_SIFRENI_YAZ" # <--- Kanka şifreni buraya yazmayı unutma!
+ADMIN_PASS = "admin123" # <--- Kanka şifreni buraya yazmayı unutma!
 # ----------------------
 
 DB_PATH = os.path.join(os.path.dirname(__file__), 'database.db')
