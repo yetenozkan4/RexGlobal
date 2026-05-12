@@ -21,16 +21,14 @@
         .total-row { display: flex; justify-content: space-between; margin-top: 20px; font-size: 20px; font-weight: bold; color: white; border-top: 1px solid #2a3a50; padding-top: 15px; }
         
         label { display: block; font-size: 12px; color: #8f98a0; margin-bottom: 5px; text-transform: uppercase; font-weight: bold; }
-        input, select { width: 100%; background: #1e2329; border: 1px solid #2a2d35; color: white; padding: 12px; border-radius: 4px; margin-bottom: 15px; outline: none; transition: border-color 0.2s; }
-        input:focus { border-color: #66c0f4; }
+        input, select, textarea { width: 100%; background: #1e2329; border: 1px solid #2a2d35; color: white; padding: 12px; border-radius: 4px; margin-bottom: 15px; outline: none; transition: border-color 0.2s; box-sizing: border-box; font-family: inherit; }
+        input:focus, textarea:focus { border-color: #66c0f4; }
 
         button { width: 100%; padding: 15px; background: #a4d007; color: #1a1a1a; border: none; cursor: pointer; font-weight: bold; border-radius: 4px; font-size: 16px; margin-top: 10px; transition: transform 0.1s, background 0.2s; }
         button:hover { background: #b8e60a; transform: translateY(-1px); }
-        button:active { transform: translateY(0); }
         
         .empty-msg { text-align: center; padding: 100px 20px; color: #8f98a0; grid-column: span 2; }
         .back-link { color: #66c0f4; text-decoration: none; display: inline-block; margin-bottom: 10px; font-size: 14px; grid-column: span 2; }
-        .back-link:hover { text-decoration: underline; }
     </style>
 </head>
 <body>
@@ -46,7 +44,9 @@
             <label>Alıcı Bilgileri</label>
             <input type="text" id="fullName" placeholder="Adınız Soyadınız" required>
             <input type="email" id="email" placeholder="E-Posta Adresiniz" required>
-            <input type="text" id="tradeUrl" placeholder="Steam Takas Linkiniz (Trade URL)" required>
+            
+            <label>Sipariş Notu / Teslimat Bilgisi</label>
+            <textarea id="orderNote" placeholder="Teslimat için bir adres veya eklemek istediğiniz bir not varsa buraya yazın..." style="height: 80px; resize: none;"></textarea>
             
             <label>Ödeme Yöntemi</label>
             <select id="payMethod">
@@ -65,13 +65,12 @@
             </div>
 
             <button onclick="completeOrder()">SİPARİŞİ TAMAMLA</button>
-            <p style="font-size: 11px; color: #555; text-align: center; margin-top: 10px;">Ödemeniz 256-bit SSL ile korunmaktadır.</p>
+            <p style="font-size: 11px; color: #555; text-align: center; margin-top: 10px;">Ödemeniz RexGlobal güvencesiyle korunmaktadır.</p>
         </div>
 
         <div class="order-summary">
             <h3 style="color:white; margin-top:0; font-size: 16px;">Sipariş Özeti</h3>
-            <div id="cartList">
-                </div>
+            <div id="cartList"></div>
             <div class="total-row">
                 <span>Toplam:</span>
                 <span id="totalPrice">0.00 TL</span>
@@ -82,9 +81,7 @@
     <div id="emptyState" class="empty-msg" style="display: none;">
         <div style="font-size: 50px; margin-bottom: 20px;">🛒</div>
         <h2>Sepetin Boş Kanka!</h2>
-        <p>Görünüşe göre henüz bir ürün eklememişsin.</p>
-        <br>
-        <a href="/" style="background: #66c0f4; color: white; padding: 10px 25px; text-decoration: none; border-radius: 4px; font-weight: bold;">Ürünlere Göz At</a>
+        <a href="/" style="background: #66c0f4; color: white; padding: 10px 25px; text-decoration: none; border-radius: 4px; font-weight: bold; display: inline-block; margin-top: 20px;">Ürünlere Göz At</a>
     </div>
 </div>
 
@@ -126,12 +123,11 @@
             return;
         }
 
-        alert('Siparişiniz Alındı Kanka! Ödeme onayından sonra teslimat süreci başlayacaktır.');
+        alert('Siparişiniz Alındı Kanka! RexGlobal üzerinden en kısa sürede teslimat yapılacaktır.');
         localStorage.removeItem('rexCart'); 
         window.location.href = '/';
     }
 
-    // Sayfa yüklendiğinde çalıştır
     loadCheckout();
 </script>
 
